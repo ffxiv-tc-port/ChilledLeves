@@ -1,9 +1,14 @@
 {
   "Author": "Ice",
   "Name": "Chilled Leves",
-  "Punchline": "I heard you like your leves on the rocks.",
-  "Description": "A leve helper that lets you select which ones you want to do, and help turn them in for you. YOU NEED NAVMESH INSTALLED AS AN FYI.",
+  "InternalName": "ChilledLeves",
+  "Punchline": "理符任務，冰鎮上桌。",
+  "Description": "理符任務輔助工具：讓你挑選想接的理符任務，並自動前往接取、執行與繳交。注意：必須先安裝 vnavmesh 才能使用。",
   "ApplicableVersion": "any",
+  "RepoUrl": "https://github.com/ffxiv-tc-port/ChilledLeves",
+  "IconUrl": "https://raw.githubusercontent.com/ffxiv-tc-port/DalamudPluginsTC/main/icons/ChilledLeves.png",
+  "LoadPriority": 0,
+  "DalamudApiLevel": 13,
   "Tags": [
     "Leves",
     "Crafters",

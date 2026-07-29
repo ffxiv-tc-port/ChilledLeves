@@ -2,15 +2,28 @@
 <Project Sdk="Dalamud.NET.Sdk/13.0">
 
   <PropertyGroup>
-    <Version>1.0.1.18</Version>
     <Description>Bringing in automating the leve process, one leve at a time.</Description>
-    <PackageProjectUrl>https://github.com/goatcorp/ChilledLeves</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/ffxiv-tc-port/ChilledLeves</PackageProjectUrl>
     <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
     <IsPackable>true</IsPackable>
     <RootNamespace>ChilledLeves</RootNamespace>
     <TargetFramework>net9.0-windows7.0</TargetFramework>
 	<NoWarn>CS8618; CS8625; CS8629; </NoWarn>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <BuildNumberFile>$(MSBuildProjectDirectory)\BuildNumber.txt</BuildNumberFile>
+    <_PreviousBuildNumber Condition="Exists('$(BuildNumberFile)')">$([System.IO.File]::ReadAllText('$(BuildNumberFile)').Trim())</_PreviousBuildNumber>
+    <_PreviousBuildNumber Condition="'$(_PreviousBuildNumber)' == ''">0</_PreviousBuildNumber>
+    <BuildNumber>$([MSBuild]::Add($(_PreviousBuildNumber), 1))</BuildNumber>
+    <VersionPrefix>7.20.0</VersionPrefix>
+    <Version>$(VersionPrefix).$(BuildNumber)</Version>
+    <AssemblyVersion>$(Version)</AssemblyVersion>
+    <FileVersion>$(Version)</FileVersion>
+  </PropertyGroup>
+  <Target Name="PersistBuildNumber" AfterTargets="Build">
+    <WriteLinesToFile File="$(BuildNumberFile)" Lines="$(BuildNumber)" Overwrite="true" />
+  </Target>
 
   <ItemGroup>
     <Content Include="ChilledLeves.json" />
