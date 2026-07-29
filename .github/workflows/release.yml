@@ -1,3 +1,5 @@
+# Triggered by workflow_dispatch only - scripts/release_plugin.py in
+# DalamudPluginsTC dispatches this explicitly after pushing the vX.Y.Z.N tag.
 name: Release
 
 on:

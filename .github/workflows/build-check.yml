@@ -1,3 +1,7 @@
+# Gate baseline note: the gate compares <VersionPrefix> against 7.15.0 and only
+# runs the build job when they differ. This repo is on 7.20.0, so the build job
+# really does compile. Do not "fix" the 7.15.0 baseline - that would turn this
+# workflow back into a no-op, which is what it is on the older fleet repos.
 name: Build Check
 
 on:
