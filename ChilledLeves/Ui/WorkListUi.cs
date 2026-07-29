@@ -65,7 +65,7 @@ namespace ChilledLeves.Ui
         #endregion
 
         public WorkListUi() : 
-            base($"Worklist [ChilledLeves] {P.GetType().Assembly.GetName().Version} ###WorkListChilledLeves")
+            base($"{"Worklist".Loc()} [ChilledLeves] {P.GetType().Assembly.GetName().Version} ###WorkListChilledLeves")
         {
             Flags = ImGuiWindowFlags.None;
             SizeConstraints = new()
@@ -560,8 +560,8 @@ namespace ChilledLeves.Ui
                 
                 float navButtonHeight = textLineHeight * 1.5f;
                 float btnPadding = 8 * fontScale;
-                float mainBtnWidth = ImGui.CalcTextSize("Main Window").X + btnPadding * 2;
-                float gatherBtnWidth = ImGui.CalcTextSize("Priority Leve Grind Window").X + btnPadding * 2;
+                float mainBtnWidth = ImGui.CalcTextSize("Main Window".Loc()).X + btnPadding * 2;
+                float gatherBtnWidth = ImGui.CalcTextSize("Priority Leve Grind Window".Loc()).X + btnPadding * 2;
                 
                 // Left-aligned buttons
                 ImGui.BeginGroup();
@@ -572,7 +572,7 @@ namespace ChilledLeves.Ui
                     if (!HasPlugin("vnavmesh"))
                     {
                         // Check if button is clicked
-                        if (ImGui.Button(buttonText, new Vector2(gatherBtnWidth / 2, navButtonHeight)))
+                        if (ImGui.Button(buttonText.Loc(), new Vector2(gatherBtnWidth / 2, navButtonHeight)))
                         {
                             ImGui.SetClipboardText("https://puni.sh/api/repository/veyn");
                             buttonText = "Copied to Clipboard";
@@ -582,7 +582,7 @@ namespace ChilledLeves.Ui
                         if (ImGui.IsItemHovered())
                         {
                             ImGui.BeginTooltip();
-                            ImGui.Text("Press the button to copy the repo to your clipboard");
+                            ImGui.Text("Press the button to copy the repo to your clipboard".Loc());
                             ImGui.EndTooltip();
                         }
 
@@ -594,7 +594,7 @@ namespace ChilledLeves.Ui
                     }
                     else if (HasPlugin("vnavmesh"))
                     {
-                        if (ImGui.Button("Start", new Vector2(gatherBtnWidth / 2, navButtonHeight)))
+                        if (ImGui.Button("Start".Loc(), new Vector2(gatherBtnWidth / 2, navButtonHeight)))
                         {
                             SchedulerMain.WorkListMode = true;
                             SchedulerMain.EnablePlugin();
@@ -604,20 +604,20 @@ namespace ChilledLeves.Ui
                 ImGui.SameLine();
                 using (ImRaii.Disabled(!SchedulerMain.AreWeTicking))
                 {
-                    if (ImGui.Button("Stop", new Vector2(gatherBtnWidth / 2, navButtonHeight)))
+                    if (ImGui.Button("Stop".Loc(), new Vector2(gatherBtnWidth / 2, navButtonHeight)))
                     {
                         SchedulerMain.DisablePlugin();
                     }
                 }
 
-                if (ImGui.Button("Main Window", new Vector2(mainBtnWidth, navButtonHeight)))
+                if (ImGui.Button("Main Window".Loc(), new Vector2(mainBtnWidth, navButtonHeight)))
                 {
                     P.mainWindow.IsOpen = true;
                 }
                 
                 ImGui.SameLine();
                 
-                if (ImGui.Button("Priority Leve Grind Window", new Vector2(gatherBtnWidth, navButtonHeight)))
+                if (ImGui.Button("Priority Leve Grind Window".Loc(), new Vector2(gatherBtnWidth, navButtonHeight)))
                 {
                     P.gatherModeUi.IsOpen = true;
                 }
@@ -626,7 +626,7 @@ namespace ChilledLeves.Ui
                 
                 // Right-aligned allowances info
                 float windowWidth = ImGui.GetWindowWidth();
-                string allowancesInfo = $"Allowances: {Allowances}/100 | Next in: {NextAllowances:hh\\:mm\\:ss}";
+                string allowancesInfo = "Allowances: ??/100 | Next in: ??".Loc(Allowances, NextAllowances.ToString("hh':'mm':'ss"));
                 float infoWidth = ImGui.CalcTextSize(allowancesInfo).X;
                 
                 // Increased padding to prevent text from being cut off
@@ -645,8 +645,8 @@ namespace ChilledLeves.Ui
             {
                 float navButtonHeight = textLineHeight * 1.5f;
                 float btnPadding = 8 * fontScale;
-                float mainBtnWidth = ImGui.CalcTextSize("Main Window").X + btnPadding * 2;
-                float gatherBtnWidth = ImGui.CalcTextSize("Priority Leve Grind Window").X + btnPadding * 2;
+                float mainBtnWidth = ImGui.CalcTextSize("Main Window".Loc()).X + btnPadding * 2;
+                float gatherBtnWidth = ImGui.CalcTextSize("Priority Leve Grind Window".Loc()).X + btnPadding * 2;
 
                 // Left-aligned buttons
 
@@ -657,7 +657,7 @@ namespace ChilledLeves.Ui
                     if (!HasPlugin("vnavmesh"))
                     {
                         // Check if button is clicked
-                        if (ImGui.Button(buttonText, new Vector2(gatherBtnWidth / 2, navButtonHeight)))
+                        if (ImGui.Button(buttonText.Loc(), new Vector2(gatherBtnWidth / 2, navButtonHeight)))
                         {
                             ImGui.SetClipboardText("https://puni.sh/api/repository/veyn");
                             buttonText = "Copied to Clipboard";
@@ -667,7 +667,7 @@ namespace ChilledLeves.Ui
                         if (ImGui.IsItemHovered())
                         {
                             ImGui.BeginTooltip();
-                            ImGui.Text("Press the button to copy the repo to your clipboard");
+                            ImGui.Text("Press the button to copy the repo to your clipboard".Loc());
                             ImGui.EndTooltip();
                         }
 
@@ -679,7 +679,7 @@ namespace ChilledLeves.Ui
                     }
                     else if (HasPlugin("vnavmesh"))
                     {
-                        if (ImGui.Button("Start", new Vector2(gatherBtnWidth / 2, navButtonHeight)))
+                        if (ImGui.Button("Start".Loc(), new Vector2(gatherBtnWidth / 2, navButtonHeight)))
                         {
                             SchedulerMain.WorkListMode = true;
                             SchedulerMain.EnablePlugin();
@@ -689,19 +689,19 @@ namespace ChilledLeves.Ui
                 ImGui.SameLine();
                 using (ImRaii.Disabled(!SchedulerMain.AreWeTicking))
                 {
-                    if (ImGui.Button("Stop", new Vector2(gatherBtnWidth / 2, navButtonHeight)))
+                    if (ImGui.Button("Stop".Loc(), new Vector2(gatherBtnWidth / 2, navButtonHeight)))
                     {
                         SchedulerMain.DisablePlugin();
                     }
                 }
-                if (ImGui.Button("Main Window", new Vector2(mainBtnWidth, navButtonHeight)))
+                if (ImGui.Button("Main Window".Loc(), new Vector2(mainBtnWidth, navButtonHeight)))
                 {
                     P.mainWindow.IsOpen = true;
                 }
                 
                 ImGui.SameLine();
                 
-                if (ImGui.Button("Priority Leve Grind Window", new Vector2(gatherBtnWidth, navButtonHeight)))
+                if (ImGui.Button("Priority Leve Grind Window".Loc(), new Vector2(gatherBtnWidth, navButtonHeight)))
                 {
                     P.gatherModeUi.IsOpen = true;
                 }
@@ -710,7 +710,7 @@ namespace ChilledLeves.Ui
                 
                 // Right-aligned allowances info
                 float windowWidth = ImGui.GetWindowWidth();
-                string allowancesInfo = $"Allowances: {Allowances}/100 | Next in: {NextAllowances:hh\\:mm\\:ss}";
+                string allowancesInfo = "Allowances: ??/100 | Next in: ??".Loc(Allowances, NextAllowances.ToString("hh':'mm':'ss"));
                 float infoWidth = ImGui.CalcTextSize(allowancesInfo).X;
                 
                 // Increased padding to prevent text from being cut off
@@ -723,7 +723,7 @@ namespace ChilledLeves.Ui
             ImGui.Separator();
             ImGui.Spacing();
             
-            ImGui.Text($"Amount of Accepted Leves: {GetNumAcceptedLeveQuests()}");
+            ImGui.Text("Amount of Accepted Leves: ??".Loc(GetNumAcceptedLeveQuests()));
 
             #endregion
 
@@ -740,7 +740,7 @@ namespace ChilledLeves.Ui
             }
             
             ImGui.SameLine();
-            ImGui.Text("Keep list after completion?");
+            ImGui.Text("Keep list after completion?".Loc());
             
             if (usingIceTheme)
             {
@@ -754,7 +754,7 @@ namespace ChilledLeves.Ui
             }
             
             ImGui.SameLine();
-            ImGui.Text("Increase delay between leves");
+            ImGui.Text("Increase delay between leves".Loc());
             
             if (usingIceTheme)
             {
@@ -768,7 +768,7 @@ namespace ChilledLeves.Ui
             }
             
             ImGui.SameLine();
-            ImGui.Text("Grab multiple leve's from vendor");
+            ImGui.Text("Grab multiple leve's from vendor".Loc());
 
             if (usingIceTheme)
             {
@@ -782,7 +782,7 @@ namespace ChilledLeves.Ui
             }
 
             ImGui.SameLine();
-            ImGui.Text("Repeat Last Leve");
+            ImGui.Text("Repeat Last Leve".Loc());
 
             // Create a row of buttons for different actions
             float buttonSpacing = 10 * fontScale;
@@ -790,22 +790,22 @@ namespace ChilledLeves.Ui
             float buttonHeight = textLineHeight * 1.5f;
 
             // Artisan export button
-            string artisanPreCraft = "Artisan Pre-Crafts";
+            string artisanPreCraft = "Artisan Pre-Crafts".Loc();
             var artisanPCbuttonSize = ImGui.CalcTextSize(artisanPreCraft);
             float artisanPCBtnWidth = artisanPCbuttonSize.X + ImGui.GetStyle().FramePadding.X * 2 * fontScale;
 
             // Artisan export button
-            string artisanFinal = "Artisan Final Items";
+            string artisanFinal = "Artisan Final Items".Loc();
             var buttonSize = ImGui.CalcTextSize(artisanFinal);
             float artisanFinalBtnWidth = buttonSize.X + ImGui.GetStyle().FramePadding.X * 2 * fontScale;
 
             // Teamcraft List button
-            string teamcraftList = "Teamcraft Link";
+            string teamcraftList = "Teamcraft Link".Loc();
             var tcbuttonSize = ImGui.CalcTextSize(teamcraftList);
             float tcBtnWidth = tcbuttonSize.X + ImGui.GetStyle().FramePadding.X * 2 * fontScale;
 
             // Import/Export button
-            string importExport = "Import/Export Worklists";
+            string importExport = "Import/Export Worklists".Loc();
             var ieBtnSize = ImGui.CalcTextSize(importExport);
             float ieBtnWidth = ieBtnSize.X + ImGui.GetStyle().FramePadding.X * 2 * fontScale;
             
@@ -829,8 +829,8 @@ namespace ChilledLeves.Ui
                 if (ImGui.IsItemHovered())
                 {
                     ImGui.BeginTooltip();
-                    ImGui.Text("Exports the items you need as a \"Pre-craft Items\" list. \n" +
-                               "Does not include Final Items");
+                    ImGui.Text(("Exports the items you need as a \"Pre-craft Items\" list. \n" +
+                               "Does not include Final Items").Loc());
                     ImGui.EndTooltip();
                 }
 
@@ -844,8 +844,8 @@ namespace ChilledLeves.Ui
                 if (ImGui.IsItemHovered())
                 {
                     ImGui.BeginTooltip();
-                    ImGui.Text("Exports the items you need as a \"Final Items\" list. \n" +
-                               "Does not include Pre-Crafts");
+                    ImGui.Text(("Exports the items you need as a \"Final Items\" list. \n" +
+                               "Does not include Pre-Crafts").Loc());
                     ImGui.EndTooltip();
                 }
 
@@ -858,7 +858,7 @@ namespace ChilledLeves.Ui
                 if (ImGui.IsItemHovered())
                 {
                     ImGui.BeginTooltip();
-                    ImGui.Text("Copy Teamcraft Link");
+                    ImGui.Text("Copy Teamcraft Link".Loc());
                     ImGui.EndTooltip();
                 }
 
@@ -901,7 +901,7 @@ namespace ChilledLeves.Ui
             if (ImGui.IsItemHovered())
             {
                 ImGui.BeginTooltip();
-                ImGui.Text("Save and load worklists from JSON files");
+                ImGui.Text("Save and load worklists from JSON files".Loc());
                 ImGui.EndTooltip();
             }
             
@@ -920,21 +920,21 @@ namespace ChilledLeves.Ui
                     if (ImGui.BeginTabBar("ImportExportTabs", ImGuiTabBarFlags.None))
                     {
                         // Save tab
-                        if (ImGui.BeginTabItem("Active Worklist"))
+                        if (ImGui.BeginTabItem("Active Worklist".Loc() + "###ActiveWorklistTab"))
                         {
                             DrawSaveWorklistSection(currentInstance, textLineHeight, usingIceTheme);
                             ImGui.EndTabItem();
                         }
                         
                         // Load tab
-                        if (ImGui.BeginTabItem("Saved Worklists"))
+                        if (ImGui.BeginTabItem("Saved Worklists".Loc() + "###SavedWorklistsTab"))
                         {
                             DrawSavedWorklistsSection(currentInstance, textLineHeight, usingIceTheme);
                             ImGui.EndTabItem();
                         }
                         
                         // Import tab
-                        if (ImGui.BeginTabItem("Import"))
+                        if (ImGui.BeginTabItem("Import".Loc() + "###ImportTab"))
                         {
                             DrawImportSection(currentInstance, textLineHeight, usingIceTheme);
                             ImGui.EndTabItem();
@@ -950,21 +950,21 @@ namespace ChilledLeves.Ui
                     if (ImGui.BeginTabBar("ImportExportTabs", ImGuiTabBarFlags.None))
                     {
                         // Save tab
-                        if (ImGui.BeginTabItem("Active Worklist"))
+                        if (ImGui.BeginTabItem("Active Worklist".Loc() + "###ActiveWorklistTab"))
                         {
                             DrawSaveWorklistSection(currentInstance, textLineHeight, usingIceTheme);
                             ImGui.EndTabItem();
                         }
                         
                         // Load tab
-                        if (ImGui.BeginTabItem("Saved Worklists"))
+                        if (ImGui.BeginTabItem("Saved Worklists".Loc() + "###SavedWorklistsTab"))
                         {
                             DrawSavedWorklistsSection(currentInstance, textLineHeight, usingIceTheme);
                             ImGui.EndTabItem();
                         }
                         
                         // Import tab
-                        if (ImGui.BeginTabItem("Import"))
+                        if (ImGui.BeginTabItem("Import".Loc() + "###ImportTab"))
                         {
                             DrawImportSection(currentInstance, textLineHeight, usingIceTheme);
                             ImGui.EndTabItem();
@@ -984,11 +984,11 @@ namespace ChilledLeves.Ui
             {
                 currentInstance._importConfirmationOpen = importConfirmOpen;
                 
-                ImGui.Text("This will replace your current worklist. Are you sure?");
+                ImGui.Text("This will replace your current worklist. Are you sure?".Loc());
                 if (currentInstance._worklistToImport != null)
                 {
                     ImGui.TextColored(new Vector4(0.9f, 0.9f, 0.3f, 1.0f), 
-                        $"Importing: {currentInstance._worklistToImport.Name} ({currentInstance._worklistToImport.Entries.Count} items)");
+                        "Importing: ?? (?? items)".Loc(currentInstance._worklistToImport.Name, currentInstance._worklistToImport.Entries.Count));
                 }
                 ImGui.Separator();
                 
@@ -1002,7 +1002,7 @@ namespace ChilledLeves.Ui
                     int btnPopupStyleCount = ThemeHelper.PushButtonStyle();
                     ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 4.0f);
                     
-                    if (ImGui.Button("Cancel", new Vector2(buttonWidth, 0)))
+                    if (ImGui.Button("Cancel".Loc(), new Vector2(buttonWidth, 0)))
                     {
                         currentInstance._worklistToImport = null;
                         currentInstance._importConfirmationOpen = false;
@@ -1011,7 +1011,7 @@ namespace ChilledLeves.Ui
                     
                     ImGui.SameLine();
                     
-                    if (ImGui.Button("Import", new Vector2(buttonWidth, 0)))
+                    if (ImGui.Button("Import".Loc(), new Vector2(buttonWidth, 0)))
                     {
                         if (currentInstance._worklistToImport != null)
                         {
@@ -1027,7 +1027,7 @@ namespace ChilledLeves.Ui
                 }
                 else
                 {
-                    if (ImGui.Button("Cancel", new Vector2(buttonWidth, 0)))
+                    if (ImGui.Button("Cancel".Loc(), new Vector2(buttonWidth, 0)))
                     {
                         currentInstance._worklistToImport = null;
                         currentInstance._importConfirmationOpen = false;
@@ -1036,7 +1036,7 @@ namespace ChilledLeves.Ui
                     
                     ImGui.SameLine();
                     
-                    if (ImGui.Button("Import", new Vector2(buttonWidth, 0)))
+                    if (ImGui.Button("Import".Loc(), new Vector2(buttonWidth, 0)))
                     {
                         if (currentInstance._worklistToImport != null)
                         {
@@ -1062,11 +1062,11 @@ namespace ChilledLeves.Ui
             {
                 currentInstance._clipboardImportConfirmationOpen = clipboardImportConfirmOpen;
                 
-                ImGui.Text("This will replace your current worklist with data from clipboard. Continue?");
+                ImGui.Text("This will replace your current worklist with data from clipboard. Continue?".Loc());
                 if (currentInstance._clipboardWorklist != null)
                 {
                     ImGui.TextColored(new Vector4(0.9f, 0.9f, 0.3f, 1.0f),
-                        $"Importing: {currentInstance._clipboardWorklist.Name} ({currentInstance._clipboardWorklist.Entries.Count} items)");
+                        "Importing: ?? (?? items)".Loc(currentInstance._clipboardWorklist.Name, currentInstance._clipboardWorklist.Entries.Count));
                 }
                 ImGui.Separator();
 
@@ -1080,7 +1080,7 @@ namespace ChilledLeves.Ui
                     int btnPopupStyleCount = ThemeHelper.PushButtonStyle();
                     ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 4.0f);
 
-                    if (ImGui.Button("Cancel", new Vector2(buttonWidth, 0)))
+                    if (ImGui.Button("Cancel".Loc(), new Vector2(buttonWidth, 0)))
                     {
                         currentInstance._clipboardWorklist = null;
                         currentInstance._clipboardImportConfirmationOpen = false;
@@ -1089,7 +1089,7 @@ namespace ChilledLeves.Ui
 
                     ImGui.SameLine();
 
-                    if (ImGui.Button("Import", new Vector2(buttonWidth, 0)))
+                    if (ImGui.Button("Import".Loc(), new Vector2(buttonWidth, 0)))
                     {
                         if (currentInstance._clipboardWorklist != null)
                         {
@@ -1104,7 +1104,7 @@ namespace ChilledLeves.Ui
                 }
                 else
                 {
-                    if (ImGui.Button("Cancel", new Vector2(buttonWidth, 0)))
+                    if (ImGui.Button("Cancel".Loc(), new Vector2(buttonWidth, 0)))
                     {
                         currentInstance._clipboardWorklist = null;
                         currentInstance._clipboardImportConfirmationOpen = false;
@@ -1113,7 +1113,7 @@ namespace ChilledLeves.Ui
 
                     ImGui.SameLine();
 
-                    if (ImGui.Button("Import", new Vector2(buttonWidth, 0)))
+                    if (ImGui.Button("Import".Loc(), new Vector2(buttonWidth, 0)))
                     {
                         if (currentInstance._clipboardWorklist != null)
                         {
@@ -1157,13 +1157,13 @@ namespace ChilledLeves.Ui
 
             if (ImGui.BeginTable($"Workshop List", 7, ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders | ImGuiTableFlags.Reorderable))
             {
-                ImGui.TableSetupColumn("Level###CrafterLevels", ImGuiTableColumnFlags.WidthFixed, col0Width);
-                ImGui.TableSetupColumn("Leve Name###CrafterLeveNames", ImGuiTableColumnFlags.WidthFixed, col1Width);
-                ImGui.TableSetupColumn("Run Amount###CrafterRunAmounts", ImGuiTableColumnFlags.WidthFixed, col2Width);
-                ImGui.TableSetupColumn("Item Turnin###CrafterTurninItems", ImGuiTableColumnFlags.WidthFixed, col3Width);
-                ImGui.TableSetupColumn("Need###CrafterAmountNecessary", ImGuiTableColumnFlags.WidthFixed, col4Width);
-                    ImGui.TableSetupColumn("Have###CrafterCompleteCheck", ImGuiTableColumnFlags.WidthFixed, col5Width);
-                    ImGui.TableSetupColumn("Remove###CrafterLevesRemoveWorkList", ImGuiTableColumnFlags.WidthFixed, col6Width);
+                ImGui.TableSetupColumn("Level".Loc() + "###CrafterLevels", ImGuiTableColumnFlags.WidthFixed, col0Width);
+                ImGui.TableSetupColumn("Leve Name".Loc() + "###CrafterLeveNames", ImGuiTableColumnFlags.WidthFixed, col1Width);
+                ImGui.TableSetupColumn("Run Amount".Loc() + "###CrafterRunAmounts", ImGuiTableColumnFlags.WidthFixed, col2Width);
+                ImGui.TableSetupColumn("Item Turnin".Loc() + "###CrafterTurninItems", ImGuiTableColumnFlags.WidthFixed, col3Width);
+                ImGui.TableSetupColumn("Need".Loc() + "###CrafterAmountNecessary", ImGuiTableColumnFlags.WidthFixed, col4Width);
+                    ImGui.TableSetupColumn("Have".Loc() + "###CrafterCompleteCheck", ImGuiTableColumnFlags.WidthFixed, col5Width);
+                    ImGui.TableSetupColumn("Remove".Loc() + "###CrafterLevesRemoveWorkList", ImGuiTableColumnFlags.WidthFixed, col6Width);
 
                 ImGui.TableHeadersRow();
 
@@ -1180,13 +1180,13 @@ namespace ChilledLeves.Ui
             {
                 if (ImGui.BeginTable($"Workshop List", 7, ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders | ImGuiTableFlags.Reorderable))
                 {
-                    ImGui.TableSetupColumn("Level###CrafterLevels", ImGuiTableColumnFlags.WidthFixed, col0Width);
-                    ImGui.TableSetupColumn("Leve Name###CrafterLeveNames", ImGuiTableColumnFlags.WidthFixed, col1Width);
-                    ImGui.TableSetupColumn("Run Amount###CrafterRunAmounts", ImGuiTableColumnFlags.WidthFixed, col2Width);
-                    ImGui.TableSetupColumn("Item Turnin###CrafterTurninItems", ImGuiTableColumnFlags.WidthFixed, col3Width);
-                    ImGui.TableSetupColumn("Need###CrafterAmountNecessary", ImGuiTableColumnFlags.WidthFixed, col4Width);
-                    ImGui.TableSetupColumn("Have###CrafterCompleteCheck", ImGuiTableColumnFlags.WidthFixed, col5Width);
-                    ImGui.TableSetupColumn("Remove###CrafterLevesRemoveWorkList", ImGuiTableColumnFlags.WidthFixed, col6Width);
+                    ImGui.TableSetupColumn("Level".Loc() + "###CrafterLevels", ImGuiTableColumnFlags.WidthFixed, col0Width);
+                    ImGui.TableSetupColumn("Leve Name".Loc() + "###CrafterLeveNames", ImGuiTableColumnFlags.WidthFixed, col1Width);
+                    ImGui.TableSetupColumn("Run Amount".Loc() + "###CrafterRunAmounts", ImGuiTableColumnFlags.WidthFixed, col2Width);
+                    ImGui.TableSetupColumn("Item Turnin".Loc() + "###CrafterTurninItems", ImGuiTableColumnFlags.WidthFixed, col3Width);
+                    ImGui.TableSetupColumn("Need".Loc() + "###CrafterAmountNecessary", ImGuiTableColumnFlags.WidthFixed, col4Width);
+                    ImGui.TableSetupColumn("Have".Loc() + "###CrafterCompleteCheck", ImGuiTableColumnFlags.WidthFixed, col5Width);
+                    ImGui.TableSetupColumn("Remove".Loc() + "###CrafterLevesRemoveWorkList", ImGuiTableColumnFlags.WidthFixed, col6Width);
                     
                     ImGui.TableHeadersRow();
                     
@@ -1289,7 +1289,7 @@ namespace ChilledLeves.Ui
                     if (ImGui.IsItemHovered())
                     {
                         ImGui.BeginTooltip();
-                        ImGui.Text("Left click to copy item to clipboard");
+                        ImGui.Text("Left click to copy item to clipboard".Loc());
                         ImGui.EndTooltip();
                     }
 
@@ -1309,7 +1309,7 @@ namespace ChilledLeves.Ui
                     if (ImGui.IsItemHovered())
                     {
                         ImGui.BeginTooltip();
-                        ImGui.Text($"Have: {haveAmount}");
+                        ImGui.Text("Have: ??".Loc(haveAmount));
                         ImGui.EndTooltip();
                     }
                 }
@@ -1416,7 +1416,7 @@ namespace ChilledLeves.Ui
                 float buttonSpacing = 8 * ImGui.GetIO().FontGlobalScale;
                 float buttonWidth = (columnWidth - buttonSpacing) / 2 - 4;
                 
-                float minButtonWidth = Math.Max(60, ImGui.CalcTextSize("Import").X + 16);
+                float minButtonWidth = Math.Max(60, ImGui.CalcTextSize("Import".Loc()).X + 16);
                 buttonWidth = Math.Max(buttonWidth, minButtonWidth);
 
                 if (usingIceTheme)
@@ -1427,7 +1427,7 @@ namespace ChilledLeves.Ui
                     ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(0.25f, 0.6f, 0.8f, 0.9f));
                     ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Vector4(0.3f, 0.7f, 0.9f, 1.0f));
 
-                    if (ImGui.Button("Import", new Vector2(buttonWidth, textLineHeight * 1.2f)))
+                    if (ImGui.Button("Import".Loc(), new Vector2(buttonWidth, textLineHeight * 1.2f)))
                     {
                         currentInstance.selectedWorklistIndex = originalIndex;
                         currentInstance.ImportWorklist(worklist);
@@ -1444,7 +1444,7 @@ namespace ChilledLeves.Ui
                     ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(0.8f, 0.2f, 0.2f, 0.9f));
                     ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Vector4(0.9f, 0.3f, 0.3f, 1.0f));
 
-                    if (ImGui.Button("Delete", new Vector2(buttonWidth, textLineHeight * 1.2f)))
+                    if (ImGui.Button("Delete".Loc(), new Vector2(buttonWidth, textLineHeight * 1.2f)))
                     {
                         currentInstance.DeleteWorklist(originalIndex);
                     }
@@ -1458,7 +1458,7 @@ namespace ChilledLeves.Ui
                     ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(0.25f, 0.6f, 0.8f, 0.9f));
                     ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Vector4(0.3f, 0.7f, 0.9f, 1.0f));
 
-                    if (ImGui.Button("Import", new Vector2(buttonWidth, textLineHeight * 1.2f)))
+                    if (ImGui.Button("Import".Loc(), new Vector2(buttonWidth, textLineHeight * 1.2f)))
                     {
                         currentInstance.selectedWorklistIndex = originalIndex;
                         currentInstance.ImportWorklist(worklist);
@@ -1472,7 +1472,7 @@ namespace ChilledLeves.Ui
                     ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(0.8f, 0.2f, 0.2f, 0.9f));
                     ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Vector4(0.9f, 0.3f, 0.3f, 1.0f));
 
-                    if (ImGui.Button("Delete", new Vector2(buttonWidth, textLineHeight * 1.2f)))
+                    if (ImGui.Button("Delete".Loc(), new Vector2(buttonWidth, textLineHeight * 1.2f)))
                     {
                         currentInstance.DeleteWorklist(originalIndex);
                     }
@@ -1492,11 +1492,11 @@ namespace ChilledLeves.Ui
                 int textStyleCount = ThemeHelper.PushHeadingTextStyle();
                 if (currentInstance._isNewList)
                 {
-                    ImGui.Text("Active Worklist");
+                    ImGui.Text("Active Worklist".Loc());
                 }
                 else
                 {
-                    ImGui.Text("Edit Current Worklist");
+                    ImGui.Text("Edit Current Worklist".Loc());
                 }
                 ImGui.PopStyleColor(textStyleCount);
             }
@@ -1504,11 +1504,11 @@ namespace ChilledLeves.Ui
             {
                 if (currentInstance._isNewList)
                 {
-                    ImGui.Text("Active Worklist");
+                    ImGui.Text("Active Worklist".Loc());
                 }
                 else
                 {
-                    ImGui.Text("Edit Current Worklist");
+                    ImGui.Text("Edit Current Worklist".Loc());
                 }
             }
             
@@ -1519,12 +1519,12 @@ namespace ChilledLeves.Ui
             if (!currentInstance._isNewList && !string.IsNullOrEmpty(currentInstance._currentWorklistFile))
             {
                 ImGui.TextColored(new Vector4(0.9f, 0.7f, 0.2f, 1.0f), 
-                    $"Using worklist: {currentInstance.exportWorklistName}");
+                    "Using worklist: ??".Loc(currentInstance.exportWorklistName));
                 ImGui.Spacing();
             }
             
             ImGui.AlignTextToFramePadding();
-            ImGui.Text("Worklist Name:");
+            ImGui.Text("Worklist Name:".Loc());
             ImGui.SameLine();
             
             float inputWidth = ImGui.GetContentRegionAvail().X;
@@ -1550,7 +1550,7 @@ namespace ChilledLeves.Ui
             if (!currentInstance._isNewList)
             {
                 ImGui.SameLine();
-                if (ImGui.Button("Clear", new Vector2(50, 0)))
+                if (ImGui.Button("Clear".Loc(), new Vector2(50, 0)))
                 {
                     currentInstance._isNewList = true;
                     currentInstance._currentWorklistFile = string.Empty;
@@ -1560,7 +1560,7 @@ namespace ChilledLeves.Ui
                 if (ImGui.IsItemHovered())
                 {
                     ImGui.BeginTooltip();
-                    ImGui.Text("Clear current worklist and start a new one");
+                    ImGui.Text("Clear current worklist and start a new one".Loc());
                     ImGui.EndTooltip();
                 }
             }
@@ -1568,7 +1568,7 @@ namespace ChilledLeves.Ui
             ImGui.Spacing();
             
             bool canExport = !string.IsNullOrWhiteSpace(currentInstance.exportWorklistName) && C.workList.Count > 0;
-            string buttonLabel = currentInstance._isNewList ? "Save New Worklist" : "Save Changes";
+            string buttonLabel = currentInstance._isNewList ? "Save New Worklist".Loc() : "Save Changes".Loc();
             
             float buttonWidth = Math.Min(ImGui.GetContentRegionAvail().X * 0.7f, 250);
             float buttonHeight = textLineHeight * 1.2f;
@@ -1608,11 +1608,11 @@ namespace ChilledLeves.Ui
                 ImGui.BeginTooltip();
                 if (C.workList.Count == 0)
                 {
-                    ImGui.Text("Worklist is empty. Add items before saving.");
+                    ImGui.Text("Worklist is empty. Add items before saving.".Loc());
                 }
                 else
                 {
-                    ImGui.Text("Enter a name for the worklist to save");
+                    ImGui.Text("Enter a name for the worklist to save".Loc());
                 }
                 ImGui.EndTooltip();
             }
@@ -1629,7 +1629,7 @@ namespace ChilledLeves.Ui
                     int btnNewListStyleCount = ThemeHelper.PushButtonStyle();
                     ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 4.0f);
                     
-                    if (ImGui.Button("Create New List", new Vector2(buttonWidth, buttonHeight)))
+                    if (ImGui.Button("Create New List".Loc(), new Vector2(buttonWidth, buttonHeight)))
                     {
                         currentInstance._isNewList = true;
                         currentInstance._currentWorklistFile = string.Empty;
@@ -1641,7 +1641,7 @@ namespace ChilledLeves.Ui
                 }
                 else
                 {
-                    if (ImGui.Button("Create New List", new Vector2(buttonWidth, buttonHeight)))
+                    if (ImGui.Button("Create New List".Loc(), new Vector2(buttonWidth, buttonHeight)))
                     {
                         currentInstance._isNewList = true;
                         currentInstance._currentWorklistFile = string.Empty;
@@ -1657,18 +1657,18 @@ namespace ChilledLeves.Ui
             if (usingIceTheme)
             {
                 int textStyleCount = ThemeHelper.PushHeadingTextStyle();
-                ImGui.Text("Import Worklist from Clipboard");
+                ImGui.Text("Import Worklist from Clipboard".Loc());
                 ImGui.PopStyleColor(textStyleCount);
             }
             else
             {
-                ImGui.Text("Import Worklist from Clipboard");
+                ImGui.Text("Import Worklist from Clipboard".Loc());
             }
             
             ImGui.Separator();
             ImGui.Spacing();
             
-            ImGui.TextWrapped("Copy a worklist in JSON format to your clipboard, then click the button below to import it.");
+            ImGui.TextWrapped("Copy a worklist in JSON format to your clipboard, then click the button below to import it.".Loc());
             ImGui.Spacing();
             
             float buttonWidth = Math.Min(ImGui.GetContentRegionAvail().X * 0.7f, 250);
@@ -1682,7 +1682,7 @@ namespace ChilledLeves.Ui
                 int btnClipboardStyleCount = ThemeHelper.PushButtonStyle();
                 ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 4.0f);
                 
-                if (ImGui.Button("Import from Clipboard", new Vector2(buttonWidth, buttonHeight)))
+                if (ImGui.Button("Import from Clipboard".Loc(), new Vector2(buttonWidth, buttonHeight)))
                 {
                     currentInstance.ImportFromClipboard();
                 }
@@ -1692,7 +1692,7 @@ namespace ChilledLeves.Ui
             }
             else
             {
-                if (ImGui.Button("Import from Clipboard", new Vector2(buttonWidth, buttonHeight)))
+                if (ImGui.Button("Import from Clipboard".Loc(), new Vector2(buttonWidth, buttonHeight)))
                 {
                     currentInstance.ImportFromClipboard();
                 }
@@ -1701,7 +1701,7 @@ namespace ChilledLeves.Ui
             if (ImGui.IsItemHovered())
             {
                 ImGui.BeginTooltip();
-                ImGui.Text("Import a worklist from clipboard in JSON format");
+                ImGui.Text("Import a worklist from clipboard in JSON format".Loc());
                 ImGui.EndTooltip();
             }
             
@@ -1712,12 +1712,12 @@ namespace ChilledLeves.Ui
             if (usingIceTheme)
             {
                 int textStyleCount = ThemeHelper.PushHeadingTextStyle();
-                ImGui.Text("Export Current Worklist to Clipboard");
+                ImGui.Text("Export Current Worklist to Clipboard".Loc());
                 ImGui.PopStyleColor(textStyleCount);
             }
             else
             {
-                ImGui.Text("Export Current Worklist to Clipboard");
+                ImGui.Text("Export Current Worklist to Clipboard".Loc());
             }
             
             ImGui.Spacing();
@@ -1732,7 +1732,7 @@ namespace ChilledLeves.Ui
                 ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(0.25f, 0.6f, 0.8f, 0.9f));
                 ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Vector4(0.3f, 0.7f, 0.9f, 1.0f));
                 
-                if (ImGui.Button("Copy Worklist as JSON", new Vector2(buttonWidth, buttonHeight)))
+                if (ImGui.Button("Copy Worklist as JSON".Loc(), new Vector2(buttonWidth, buttonHeight)))
                 {
                     if (hasItems)
                     {
@@ -1748,11 +1748,11 @@ namespace ChilledLeves.Ui
                 ImGui.BeginTooltip();
                 if (hasItems)
                 {
-                    ImGui.Text("Copy as formatted JSON for sharing with others");
+                    ImGui.Text("Copy as formatted JSON for sharing with others".Loc());
                 }
                 else
                 {
-                    ImGui.Text("Add items to your worklist first");
+                    ImGui.Text("Add items to your worklist first".Loc());
                 }
                 ImGui.EndTooltip();
             }
@@ -1764,15 +1764,15 @@ namespace ChilledLeves.Ui
             if (usingIceTheme)
             {
                 int textStyleCount = ThemeHelper.PushHeadingTextStyle();
-                ImGui.Text("Saved Worklists");
+                ImGui.Text("Saved Worklists".Loc());
                 ImGui.PopStyleColor(textStyleCount);
             }
             else
             {
-                ImGui.Text("Saved Worklists");
+                ImGui.Text("Saved Worklists".Loc());
             }
             
-            float folderButtonWidth = ImGui.CalcTextSize("Open Folder").X + 20;
+            float folderButtonWidth = ImGui.CalcTextSize("Open Folder".Loc()).X + 20;
             ImGui.SameLine(ImGui.GetContentRegionAvail().X - folderButtonWidth);
             
             if (usingIceTheme)
@@ -1780,7 +1780,7 @@ namespace ChilledLeves.Ui
                 int btnFolderStyleCount = ThemeHelper.PushButtonStyle();
                 ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 4.0f);
                 
-                if (ImGui.Button("Open Folder", new Vector2(folderButtonWidth, 0)))
+                if (ImGui.Button("Open Folder".Loc(), new Vector2(folderButtonWidth, 0)))
                 {
                     currentInstance.OpenWorklistFolder();
                 }
@@ -1790,7 +1790,7 @@ namespace ChilledLeves.Ui
             }
             else
             {
-                if (ImGui.Button("Open Folder", new Vector2(folderButtonWidth, 0)))
+                if (ImGui.Button("Open Folder".Loc(), new Vector2(folderButtonWidth, 0)))
                 {
                     currentInstance.OpenWorklistFolder();
                 }
@@ -1799,7 +1799,7 @@ namespace ChilledLeves.Ui
             if (ImGui.IsItemHovered())
             {
                 ImGui.BeginTooltip();
-                ImGui.Text("Open the worklists folder in file explorer");
+                ImGui.Text("Open the worklists folder in file explorer".Loc());
                 ImGui.EndTooltip();
             }
             
@@ -1807,7 +1807,7 @@ namespace ChilledLeves.Ui
             ImGui.Spacing();
             
             ImGui.AlignTextToFramePadding();
-            ImGui.TextUnformatted("Search:");
+            ImGui.TextUnformatted("Search:".Loc());
             ImGui.SameLine();
             
             if (usingIceTheme)
@@ -1831,11 +1831,11 @@ namespace ChilledLeves.Ui
             if (currentInstance.savedWorklists.Count == 0)
             {
                 ImGui.Spacing();
-                ImGui.TextDisabled("No saved worklists found");
+                ImGui.TextDisabled("No saved worklists found".Loc());
             }
             else
             {
-                ImGui.TextDisabled($"Showing {visibleLists} of {totalLists} worklists");
+                ImGui.TextDisabled("Showing ?? of ?? worklists".Loc(visibleLists, totalLists));
                 ImGui.Spacing();
                 
                 float remainingSpace = ImGui.GetContentRegionAvail().Y * 0.95f;
@@ -1851,9 +1851,9 @@ namespace ChilledLeves.Ui
                         float dateColWidth = Math.Max(120, textLineHeight * 7);
                         float actionColWidth = Math.Max(170, textLineHeight * 10);
                         
-                        ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.WidthFixed, nameColWidth);
-                        ImGui.TableSetupColumn("Created", ImGuiTableColumnFlags.WidthFixed, dateColWidth);
-                        ImGui.TableSetupColumn("Actions", ImGuiTableColumnFlags.WidthFixed, actionColWidth);
+                        ImGui.TableSetupColumn("Name".Loc() + "###WorklistName", ImGuiTableColumnFlags.WidthFixed, nameColWidth);
+                        ImGui.TableSetupColumn("Created".Loc() + "###WorklistCreated", ImGuiTableColumnFlags.WidthFixed, dateColWidth);
+                        ImGui.TableSetupColumn("Actions".Loc() + "###WorklistActions", ImGuiTableColumnFlags.WidthFixed, actionColWidth);
                         
                         ImGui.TableHeadersRow();
                         
@@ -1872,9 +1872,9 @@ namespace ChilledLeves.Ui
                         float dateColWidth = Math.Max(120, textLineHeight * 7);
                         float actionColWidth = Math.Max(170, textLineHeight * 10);
                         
-                        ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.WidthFixed, nameColWidth);
-                        ImGui.TableSetupColumn("Created", ImGuiTableColumnFlags.WidthFixed, dateColWidth);
-                        ImGui.TableSetupColumn("Actions", ImGuiTableColumnFlags.WidthFixed, actionColWidth);
+                        ImGui.TableSetupColumn("Name".Loc() + "###WorklistName", ImGuiTableColumnFlags.WidthFixed, nameColWidth);
+                        ImGui.TableSetupColumn("Created".Loc() + "###WorklistCreated", ImGuiTableColumnFlags.WidthFixed, dateColWidth);
+                        ImGui.TableSetupColumn("Actions".Loc() + "###WorklistActions", ImGuiTableColumnFlags.WidthFixed, actionColWidth);
                         
                         ImGui.TableHeadersRow();
                         

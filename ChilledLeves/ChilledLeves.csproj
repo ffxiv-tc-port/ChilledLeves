@@ -27,6 +27,9 @@
 
   <ItemGroup>
     <Content Include="ChilledLeves.json" />
+    <Content Include="LanguageChineseTraditional.ini">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 	
   <ItemGroup>

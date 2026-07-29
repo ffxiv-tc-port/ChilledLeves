@@ -298,14 +298,14 @@ namespace ChilledLeves.Scheduler
                             {
                                 string ChatText = "You have hit the level set, stopping the farming process";
                                 PluginVerbos(ChatText);
-                                Svc.Chat.Print(ChatText);
+                                Svc.Chat.Print(ChatText.Loc());
                                 DisablePlugin();
                             }
                             else if (C.RunUntilSelected == "All Leves Complete" && AllCompleted())
                             {
                                 string ChatText = "All leves have been completed on for this class, topping the process";
                                 PluginVerbos(ChatText);
-                                Svc.Chat.Print(ChatText);
+                                Svc.Chat.Print(ChatText.Loc());
                                 DisablePlugin();
                             }
                             else

@@ -13,7 +13,7 @@ namespace ChilledLeves.Ui;
 internal class GatherModeUi : Window
 {
     public GatherModeUi() :
-        base($"Priority Leve Grind Window {P.GetType().Assembly.GetName().Version} ###GatherModeWorkshopWindow")
+        base($"{"Priority Leve Grind Window".Loc()} {P.GetType().Assembly.GetName().Version} ###GatherModeWorkshopWindow")
     {
         Flags = ImGuiWindowFlags.None;
         SizeConstraints = new()
@@ -114,19 +114,19 @@ internal class GatherModeUi : Window
             
             float navButtonHeight = textLineHeight * 1.5f;
             float btnPadding = 8 * fontScale;
-            float mainBtnWidth = ImGui.CalcTextSize("Main Window").X + btnPadding * 2;
-            float worklistBtnWidth = ImGui.CalcTextSize("Worklist Window").X + btnPadding * 2;
+            float mainBtnWidth = ImGui.CalcTextSize("Main Window".Loc()).X + btnPadding * 2;
+            float worklistBtnWidth = ImGui.CalcTextSize("Worklist Window".Loc()).X + btnPadding * 2;
             
             // Left-aligned buttons
             ImGui.BeginGroup();
-            if (ImGui.Button("Main Window", new Vector2(mainBtnWidth, navButtonHeight)))
+            if (ImGui.Button("Main Window".Loc(), new Vector2(mainBtnWidth, navButtonHeight)))
             {
                 P.mainWindow.IsOpen = true;
             }
             
             ImGui.SameLine();
             
-            if (ImGui.Button("Worklist Window", new Vector2(worklistBtnWidth, navButtonHeight)))
+            if (ImGui.Button("Worklist Window".Loc(), new Vector2(worklistBtnWidth, navButtonHeight)))
             {
                 P.workListUi.IsOpen = true;
             }
@@ -134,7 +134,7 @@ internal class GatherModeUi : Window
             
             // Right-aligned allowances info
             float windowWidth = ImGui.GetWindowWidth() - 20; // To give a little bit of room for the text in case of scroll bar
-            string allowancesInfo = $"Allowances: {Allowances}/100 | Next in: {NextAllowances:hh\\:mm\\:ss}";
+            string allowancesInfo = "Allowances: ??/100 | Next in: ??".Loc(Allowances, NextAllowances.ToString("hh':'mm':'ss"));
             float infoWidth = ImGui.CalcTextSize(allowancesInfo).X;
             
             ImGui.SameLine(windowWidth - infoWidth - btnPadding);
@@ -148,19 +148,19 @@ internal class GatherModeUi : Window
         {
             float navButtonHeight = textLineHeight * 1.5f;
             float btnPadding = 8 * fontScale;
-            float mainBtnWidth = ImGui.CalcTextSize("Main Window").X + btnPadding * 2;
-            float worklistBtnWidth = ImGui.CalcTextSize("Worklist Window").X + btnPadding * 2;
+            float mainBtnWidth = ImGui.CalcTextSize("Main Window".Loc()).X + btnPadding * 2;
+            float worklistBtnWidth = ImGui.CalcTextSize("Worklist Window".Loc()).X + btnPadding * 2;
             
             // Left-aligned buttons
             ImGui.BeginGroup();
-            if (ImGui.Button("Main Window", new Vector2(mainBtnWidth, navButtonHeight)))
+            if (ImGui.Button("Main Window".Loc(), new Vector2(mainBtnWidth, navButtonHeight)))
             {
                 P.mainWindow.IsOpen = true;
             }
             
             ImGui.SameLine();
             
-            if (ImGui.Button("Worklist Window", new Vector2(worklistBtnWidth, navButtonHeight)))
+            if (ImGui.Button("Worklist Window".Loc(), new Vector2(worklistBtnWidth, navButtonHeight)))
             {
                 P.workListUi.IsOpen = true;
             }
@@ -168,7 +168,7 @@ internal class GatherModeUi : Window
             
             // Right-aligned allowances info
             float windowWidth = ImGui.GetWindowWidth();
-            string allowancesInfo = $"Allowances: {Allowances}/100 | Next in: {NextAllowances:hh\\:mm\\:ss}";
+            string allowancesInfo = "Allowances: ??/100 | Next in: ??".Loc(Allowances, NextAllowances.ToString("hh':'mm':'ss"));
             float infoWidth = ImGui.CalcTextSize(allowancesInfo).X;
             
             ImGui.SameLine(windowWidth - infoWidth - btnPadding);
@@ -197,8 +197,8 @@ internal class GatherModeUi : Window
                 float tableColumn1Width = Math.Max(150, textLineHeight * 10);
                 float tableColumn2Width = Math.Max(500, textLineHeight * 30);
 
-                ImGui.TableSetupColumn("Text Information", ImGuiTableColumnFlags.WidthFixed, tableColumn1Width);
-                ImGui.TableSetupColumn("Setting Selection", ImGuiTableColumnFlags.WidthFixed, tableColumn2Width);
+                ImGui.TableSetupColumn("Text Information".Loc() + "###GatheringSettingsLabel", ImGuiTableColumnFlags.WidthFixed, tableColumn1Width);
+                ImGui.TableSetupColumn("Setting Selection".Loc() + "###GatheringSettingsValue", ImGuiTableColumnFlags.WidthFixed, tableColumn2Width);
                 
                 ImGui.TableHeadersRow();
         
@@ -217,8 +217,8 @@ internal class GatherModeUi : Window
                 float tableColumn1Width = Math.Max(150, textLineHeight * 10);
                 float tableColumn2Width = Math.Max(500, textLineHeight * 30);
 
-                ImGui.TableSetupColumn("Text Information", ImGuiTableColumnFlags.WidthFixed, tableColumn1Width);
-                ImGui.TableSetupColumn("Setting Selection", ImGuiTableColumnFlags.WidthFixed, tableColumn2Width);
+                ImGui.TableSetupColumn("Text Information".Loc() + "###GatheringSettingsLabel", ImGuiTableColumnFlags.WidthFixed, tableColumn1Width);
+                ImGui.TableSetupColumn("Setting Selection".Loc() + "###GatheringSettingsValue", ImGuiTableColumnFlags.WidthFixed, tableColumn2Width);
                 
                 ImGui.TableHeadersRow();
                 
@@ -272,14 +272,14 @@ internal class GatherModeUi : Window
                 if (ImGui.BeginTable($"Crafting Workshop List", 8, ImGuiTableFlags.RowBg | ImGuiTableFlags.Reorderable | ImGuiTableFlags.Borders | ImGuiTableFlags.Resizable | ImGuiTableFlags.SizingFixedFit))
                 {
                     // Columns for the crafters
-                    ImGui.TableSetupColumn("Prio###GatheringLevePrio", ImGuiTableColumnFlags.WidthFixed, 50);
-                    ImGui.TableSetupColumn("Complete?###GatheringLeveComplete", ImGuiTableColumnFlags.WidthFixed, 100);
-                    ImGui.TableSetupColumn("Level###GatheringLeveLevel", ImGuiTableColumnFlags.WidthFixed, 50);
-                    ImGui.TableSetupColumn("Leve Name###GatheringLeveName", ImGuiTableColumnFlags.WidthFixed, 100);
-                    ImGui.TableSetupColumn("Item Turnin###GatheringTurninItems", ImGuiTableColumnFlags.WidthFixed, 100);
-                    ImGui.TableSetupColumn("Need###GatheringAmountNecessary", ImGuiTableColumnFlags.WidthFixed, 50);
-                    ImGui.TableSetupColumn("Have###GatheringCompleteCheck", ImGuiTableColumnFlags.WidthFixed, 100);
-                    ImGui.TableSetupColumn("Triple?");
+                    ImGui.TableSetupColumn("Prio".Loc() + "###GatheringLevePrio", ImGuiTableColumnFlags.WidthFixed, 50);
+                    ImGui.TableSetupColumn("Complete?".Loc() + "###GatheringLeveComplete", ImGuiTableColumnFlags.WidthFixed, 100);
+                    ImGui.TableSetupColumn("Level".Loc() + "###GatheringLeveLevel", ImGuiTableColumnFlags.WidthFixed, 50);
+                    ImGui.TableSetupColumn("Leve Name".Loc() + "###GatheringLeveName", ImGuiTableColumnFlags.WidthFixed, 100);
+                    ImGui.TableSetupColumn("Item Turnin".Loc() + "###GatheringTurninItems", ImGuiTableColumnFlags.WidthFixed, 100);
+                    ImGui.TableSetupColumn("Need".Loc() + "###GatheringAmountNecessary", ImGuiTableColumnFlags.WidthFixed, 50);
+                    ImGui.TableSetupColumn("Have".Loc() + "###GatheringCompleteCheck", ImGuiTableColumnFlags.WidthFixed, 100);
+                    ImGui.TableSetupColumn("Triple?".Loc() + "###GatheringTripleTurnin");
                     
                     ImGui.TableHeadersRow();
                     
@@ -293,14 +293,14 @@ internal class GatherModeUi : Window
                 if (ImGui.BeginTable($"Crafting Workshop List", 8, ImGuiTableFlags.RowBg | ImGuiTableFlags.Reorderable | ImGuiTableFlags.Borders | ImGuiTableFlags.Resizable | ImGuiTableFlags.SizingFixedFit))
                 {
                     // Columns for the crafters
-                    ImGui.TableSetupColumn("Prio###GatheringLevePrio", ImGuiTableColumnFlags.WidthFixed, 50);
-                    ImGui.TableSetupColumn("Complete?###GatheringLeveComplete", ImGuiTableColumnFlags.WidthFixed, 100);
-                    ImGui.TableSetupColumn("Level###GatheringLeveLevel", ImGuiTableColumnFlags.WidthFixed, 50);
-                    ImGui.TableSetupColumn("Leve Name###GatheringLeveName", ImGuiTableColumnFlags.WidthFixed, 100);
-                    ImGui.TableSetupColumn("Item Turnin###GatheringTurninItems", ImGuiTableColumnFlags.WidthFixed, 100);
-                    ImGui.TableSetupColumn("Need###GatheringAmountNecessary", ImGuiTableColumnFlags.WidthFixed, 50);
-                    ImGui.TableSetupColumn("Have###GatheringCompleteCheck", ImGuiTableColumnFlags.WidthFixed, 100);
-                    ImGui.TableSetupColumn("Triple?");
+                    ImGui.TableSetupColumn("Prio".Loc() + "###GatheringLevePrio", ImGuiTableColumnFlags.WidthFixed, 50);
+                    ImGui.TableSetupColumn("Complete?".Loc() + "###GatheringLeveComplete", ImGuiTableColumnFlags.WidthFixed, 100);
+                    ImGui.TableSetupColumn("Level".Loc() + "###GatheringLeveLevel", ImGuiTableColumnFlags.WidthFixed, 50);
+                    ImGui.TableSetupColumn("Leve Name".Loc() + "###GatheringLeveName", ImGuiTableColumnFlags.WidthFixed, 100);
+                    ImGui.TableSetupColumn("Item Turnin".Loc() + "###GatheringTurninItems", ImGuiTableColumnFlags.WidthFixed, 100);
+                    ImGui.TableSetupColumn("Need".Loc() + "###GatheringAmountNecessary", ImGuiTableColumnFlags.WidthFixed, 50);
+                    ImGui.TableSetupColumn("Have".Loc() + "###GatheringCompleteCheck", ImGuiTableColumnFlags.WidthFixed, 100);
+                    ImGui.TableSetupColumn("Triple?".Loc() + "###GatheringTripleTurnin");
                     
                     ImGui.TableHeadersRow();
                     
@@ -401,7 +401,7 @@ internal class GatherModeUi : Window
         // Drawing start button
         using (ImRaii.Disabled(SchedulerMain.AreWeTicking))
         {
-            if (ImGui.Button("Start Gathering Leves", new Vector2(ImGui.GetContentRegionAvail().X, buttonHeight)))
+            if (ImGui.Button("Start Gathering Leves".Loc(), new Vector2(ImGui.GetContentRegionAvail().X, buttonHeight)))
             {
                 SchedulerMain.WorkListMode = false;
                 SchedulerMain.GatheringMode = true;
@@ -412,7 +412,7 @@ internal class GatherModeUi : Window
         // Drawing stop button
         using (ImRaii.Disabled(!SchedulerMain.AreWeTicking))
         {
-            if (ImGui.Button("Stop Gathering Leves", new Vector2(ImGui.GetContentRegionAvail().X, buttonHeight)))
+            if (ImGui.Button("Stop Gathering Leves".Loc(), new Vector2(ImGui.GetContentRegionAvail().X, buttonHeight)))
             {
                 SchedulerMain.DisablePlugin();
             }
@@ -425,7 +425,7 @@ internal class GatherModeUi : Window
         // Row 1 - NPC Selection
         ImGui.TableNextRow();
         ImGui.TableSetColumnIndex(0);
-        ImGui.Text("Levequest NPC:");
+        ImGui.Text("Levequest NPC:".Loc());
 
         ImGui.TableNextColumn();
         string selectableText = $"{C.SelectedNpcName} → {C.LocationName}";
@@ -436,7 +436,7 @@ internal class GatherModeUi : Window
             using var textStyle = new ThemeHelper.StyleScope();
             textStyle.PushColor(ImGuiCol.Text, ThemeHelper.FrostWhite);
 
-            if (ImGui.Button("Open NPC Selection"))
+            if (ImGui.Button("Open NPC Selection".Loc()))
             {
                 ImGui.OpenPopup("NPC Selection Popup"); // Open the popup when the selectable is clicked
             }
@@ -445,7 +445,7 @@ internal class GatherModeUi : Window
         }
         else
         {
-            if (ImGui.Button("Open NPC Selection"))
+            if (ImGui.Button("Open NPC Selection".Loc()))
             {
                 ImGui.OpenPopup("NPC Selection Popup"); // Open the popup when the selectable is clicked
             }
@@ -474,9 +474,9 @@ internal class GatherModeUi : Window
                     if (ImGui.BeginTable("NPC Table", 3, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg))
                     {
                         // Define column widths
-                        ImGui.TableSetupColumn("NPC Name", ImGuiTableColumnFlags.WidthFixed, 200);
-                        ImGui.TableSetupColumn("Level", ImGuiTableColumnFlags.WidthFixed, 50);
-                        ImGui.TableSetupColumn("Location", ImGuiTableColumnFlags.WidthFixed, 200);
+                        ImGui.TableSetupColumn("NPC Name".Loc() + "###NpcPickerName", ImGuiTableColumnFlags.WidthFixed, 200);
+                        ImGui.TableSetupColumn("Level".Loc() + "###NpcPickerLevel", ImGuiTableColumnFlags.WidthFixed, 50);
+                        ImGui.TableSetupColumn("Location".Loc() + "###NpcPickerLocation", ImGuiTableColumnFlags.WidthFixed, 200);
                         ImGui.TableHeadersRow();
                         
                         // Loop through each NPC ID and display their name and location in the table
@@ -551,9 +551,9 @@ internal class GatherModeUi : Window
                 if (ImGui.BeginTable("NPC Table", 3, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg))
                 {
                     // Define column widths
-                    ImGui.TableSetupColumn("NPC Name", ImGuiTableColumnFlags.WidthFixed, 200);
-                    ImGui.TableSetupColumn("Level", ImGuiTableColumnFlags.WidthFixed, 50);
-                    ImGui.TableSetupColumn("Location", ImGuiTableColumnFlags.WidthFixed, 200);
+                    ImGui.TableSetupColumn("NPC Name".Loc() + "###NpcPickerName", ImGuiTableColumnFlags.WidthFixed, 200);
+                    ImGui.TableSetupColumn("Level".Loc() + "###NpcPickerLevel", ImGuiTableColumnFlags.WidthFixed, 50);
+                    ImGui.TableSetupColumn("Location".Loc() + "###NpcPickerLocation", ImGuiTableColumnFlags.WidthFixed, 200);
                     ImGui.TableHeadersRow();
     
                     // Loop through each NPC ID and display their name and location in the table
@@ -604,7 +604,7 @@ internal class GatherModeUi : Window
         // Row 2 - Class Selection
         ImGui.TableNextRow();
         ImGui.TableSetColumnIndex(0);
-        ImGui.Text("Class");
+        ImGui.Text("Class".Loc());
 
         ImGui.TableNextColumn();
         float classComboWidth = Math.Max(120, textLineHeight * 7);
@@ -715,7 +715,7 @@ internal class GatherModeUi : Window
         // Row 3 - Run Until option
         ImGui.TableNextRow();
         ImGui.TableSetColumnIndex(0);
-        ImGui.Text("Run Until:");
+        ImGui.Text("Run Until:".Loc());
 
         ImGui.TableNextColumn();
         float runUntilComboWidth = 0f;
@@ -745,12 +745,12 @@ internal class GatherModeUi : Window
                                .PushColor(ImGuiCol.FrameBgActive, ThemeHelper.FrameBgActive)
                                .PushColor(ImGuiCol.CheckMark, ThemeHelper.IceBlue);
                     
-                    if (ImGui.BeginCombo("###Run Until Combo", C.RunUntilSelected))
+                    if (ImGui.BeginCombo("###Run Until Combo", C.RunUntilSelected.Loc()))
                     {
                         foreach (var selected in RunUntilList)
                         {
                             bool isSelected = (C.RunUntilSelected == selected);
-                            if (ImGui.Selectable(selected, isSelected))
+                            if (ImGui.Selectable(selected.Loc() + "###RunUntil" + selected, isSelected))
                             {
                                 C.RunUntilSelected = selected;
                                 C.Save();
@@ -764,12 +764,12 @@ internal class GatherModeUi : Window
             }
             else
             {
-                if (ImGui.BeginCombo("###Run Until Combo", C.RunUntilSelected))
+                if (ImGui.BeginCombo("###Run Until Combo", C.RunUntilSelected.Loc()))
                 {
                     foreach (var selected in RunUntilList)
                     {
                         bool isSelected = (C.RunUntilSelected == selected);
-                        if (ImGui.Selectable(selected, isSelected))
+                        if (ImGui.Selectable(selected.Loc() + "###RunUntil" + selected, isSelected))
                         {
                             C.RunUntilSelected = selected;
                             C.Save();

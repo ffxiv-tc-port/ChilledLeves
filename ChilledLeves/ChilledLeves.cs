@@ -40,6 +40,7 @@ public sealed class ChilledLeves : IDalamudPlugin
     {
         P = this;
         ECommonsMain.Init(pi, P, ECommons.Module.DalamudReflector, ECommons.Module.ObjectFunctions);
+        ECommons.LanguageHelpers.Localization.Init("ChineseTraditional");
         new ECommons.Schedulers.TickScheduler(Load);
     }
 
@@ -75,14 +76,13 @@ public sealed class ChilledLeves : IDalamudPlugin
         {
             workListUi.IsOpen = true;
         };
-        EzCmd.Add("/chilledleves", OnCommand, """
-            Open plugin interface
-            /chilledleves add [leveID] [amount] - adds the leveID/amount to worklist
-            /chilledleves clear - clears the worklist 
-            /chilledleves start | stop - starts/stops the turnin process
-            /chilledleves s|settings - Opens the worklist menu
-            /leveitalone - alias
-            """);
+        EzCmd.Add("/chilledleves", OnCommand, string.Join("\n",
+            "Open plugin interface".Loc(),
+            "/chilledleves add [leveID] [amount] - adds the leveID/amount to worklist".Loc(),
+            "/chilledleves clear - clears the worklist".Loc(),
+            "/chilledleves start | stop - starts/stops the turnin process".Loc(),
+            "/chilledleves s|settings - Opens the worklist menu".Loc(),
+            "/leveitalone - alias".Loc()));
         EzCmd.Add("/leveitalone", OnCommand);
         Svc.Framework.Update += Tick;
     }

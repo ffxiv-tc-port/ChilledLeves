@@ -103,7 +103,7 @@ internal static class SoundAlert
 
                 if (C.SendChat)
                 {
-                    ECommons.ChatMethods.ChatPrinter.Orange($"[Chilled Leves] Leve's are at: {Allowances}");
+                    ECommons.ChatMethods.ChatPrinter.Orange("[Chilled Leves] Leve's are at: ??".Loc(Allowances));
                 }
                 if (C.PlaySound)
                 {

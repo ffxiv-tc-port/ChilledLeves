@@ -838,7 +838,7 @@ public static unsafe class Utils
 
         Svc.Log.Debug($"{baseUrl}{base64}");
         ImGui.SetClipboardText($"{baseUrl}{base64}");
-        Notify.Success("Link copied to clipboard");
+        Notify.Success("Link copied to clipboard".Loc());
     }
 
     public static Dictionary<uint, int> AllItems = new();

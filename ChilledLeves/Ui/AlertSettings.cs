@@ -10,7 +10,7 @@ namespace ChilledLeves.Ui
 {
     internal class AlertSettings : Window
     {
-        public AlertSettings() : base("Chilled Leves Alert Settings ###ChilledLevesAlertSettings")
+        public AlertSettings() : base($"{"Chilled Leves Alert Settings".Loc()} ###ChilledLevesAlertSettings")
         {
             Flags = ImGuiWindowFlags.None;
 
@@ -42,7 +42,7 @@ namespace ChilledLeves.Ui
                 C.Save();
             }
 
-            if (ImGui.RadioButton("Blacklist", blacklist))
+            if (ImGui.RadioButton("Blacklist".Loc(), blacklist))
             {
                 whitelist = false;
                 C.whitelistFeature = whitelist;
@@ -57,11 +57,11 @@ namespace ChilledLeves.Ui
             if (ImGui.IsItemHovered())
             {
                 ImGui.BeginTooltip();
-                ImGui.Text("Will have it alert for all characters except the ones in the blacklist");
+                ImGui.Text("Will have it alert for all characters except the ones in the blacklist".Loc());
                 ImGui.EndTooltip();
             }
 
-            if (ImGui.RadioButton("Whitelist", whitelist))
+            if (ImGui.RadioButton("Whitelist".Loc(), whitelist))
             {
                 whitelist = true;
                 C.whitelistFeature = whitelist;
@@ -76,7 +76,7 @@ namespace ChilledLeves.Ui
             if (ImGui.IsItemHovered())
             {
                 ImGui.BeginTooltip();
-                ImGui.Text("Will ONLY alert for the characters in the whitelist");
+                ImGui.Text("Will ONLY alert for the characters in the whitelist".Loc());
                 ImGui.EndTooltip();
             }
 
@@ -88,7 +88,7 @@ namespace ChilledLeves.Ui
             else if (whitelist)
                 list = "whitelist";
 
-            if (ImGui.Button($"Add character to {list}"))
+            if (ImGui.Button("Add character to ??".Loc(list.Loc()) + "###AddCharacterToList"))
             {
                 var character = Svc.ClientState.LocalPlayer.Name.ToString();
                 var id = Svc.ClientState.LocalContentId;
@@ -146,7 +146,7 @@ namespace ChilledLeves.Ui
         private bool PlaySound = C.PlaySound;
         private bool ShowWindow = C.ShowOverlayAlert;
         private readonly Sounds[] soundValues = Enum.GetValues(typeof(Sounds)).Cast<Sounds>().ToArray();
-        private readonly string[] soundNames = Enum.GetValues(typeof(Sounds)).Cast<Sounds>().Select(s => s.ToName()).ToArray();
+        private readonly string[] soundNames = Enum.GetValues(typeof(Sounds)).Cast<Sounds>().Select(s => s.ToName().Loc()).ToArray();
 
         private bool SendChat = C.SendChat;
         private int LeveNotificationAmount = C.LeveAlertAmount;
@@ -164,7 +164,7 @@ namespace ChilledLeves.Ui
             }
             ImGui.AlignTextToFramePadding();
             ImGui.SameLine();
-            ImGui.Text("Sound Effect");
+            ImGui.Text("Sound Effect".Loc());
             if (PlaySound)
             {
                 ImGui.SameLine();
@@ -188,7 +188,7 @@ namespace ChilledLeves.Ui
                 }
             }
             ImGui.SameLine();
-            ImGui.Text($"Chat Notification");
+            ImGui.Text("Chat Notification".Loc());
 
             if (ImGui.Checkbox("###ShowAlertWindow", ref ShowWindow))
             {
@@ -199,18 +199,18 @@ namespace ChilledLeves.Ui
                 }
             }
             ImGui.SameLine();
-            ImGui.Text("Show Alert Window");
+            ImGui.Text("Show Alert Window".Loc());
 
             ImGui.Spacing();
 
-            ImGui.Text("Leve Notification Amount");
+            ImGui.Text("Leve Notification Amount".Loc());
             ImGui.SameLine();
             ImGui.TextDisabled("(?)");
             if (ImGui.IsItemHovered())
             {
                 ImGui.BeginTooltip();
-                ImGui.Text("Amount that you want the notification to go off on.");
-                ImGui.Text("Will alert you when your current leves is at or above this amount.");
+                ImGui.Text("Amount that you want the notification to go off on.".Loc());
+                ImGui.Text("Will alert you when your current leves is at or above this amount.".Loc());
                 ImGui.EndTooltip();
             }
             if (ImGui.SliderInt("###LeveAmount", ref LeveNotificationAmount, 1, 100))
