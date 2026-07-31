@@ -100,6 +100,11 @@ public static unsafe class Utils
     internal static bool? TargetgameObject(IGameObject? gameObject)
     {
         var x = gameObject;
+        // 目標已消失(重查不到)時直接中止,不要沿用舊值。
+        // 原本 x.DataId 在下面的 null 檢查之前就解參考了。
+        if (x == null)
+            return true;
+
         if (Svc.Targets.Target != null && Svc.Targets.Target.DataId == x.DataId)
             return true;
 
@@ -117,6 +122,21 @@ public static unsafe class Utils
         return false;
     }
     internal static bool TryGetObjectByDataId(ulong dataId, out IGameObject? gameObject) => (gameObject = Svc.Objects.OrderBy(GetDistanceToPlayer).FirstOrDefault(x => x.DataId == dataId)) != null;
+
+    // ⚠️ 不要把 IGameObject 捕獲進 TaskManager 的閉包跨幀用。
+    // Dalamud 的 GameObject.Address 在建構時就凍結、永不重新解析
+    // (GameObject.cs:137-139),而 IGameObject.IsValid() 只檢查「玩家有沒有登入」、
+    // 完全不驗證位址(GameObject.cs:170-177)。所以存 IGameObject == 存一根原生指標,
+    // 而排隊中的後續任務是在「後面的幀」才執行的。
+    // 正解:閉包只捕獲 GameObjectId,每個任務執行時才重查物件表。
+    internal static bool TryGetObjectIdByDataId(ulong dataId, out ulong? objectId)
+    {
+        var obj = Svc.Objects.OrderBy(GetDistanceToPlayer).FirstOrDefault(x => x.DataId == dataId);
+        objectId = obj?.GameObjectId;
+        return objectId != null;
+    }
+
+    internal static IGameObject? ResolveObject(ulong? objectId) => objectId is null ? null : Svc.Objects.SearchById(objectId.Value);
     internal static unsafe void InteractWithObject(IGameObject? gameObject)
     {
         try
