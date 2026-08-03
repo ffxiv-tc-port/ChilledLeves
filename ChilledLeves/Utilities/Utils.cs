@@ -445,10 +445,27 @@ public static unsafe class Utils
             }
         }
 
+        // LeveDictionary/CraftDictionary only ever receive the crafter+fisher leves (see the
+        // CraftFisherJobs filter at the top of the loop above), but C.workList and
+        // C.LevePriority are *persisted config* and can outlive the dictionary that produced
+        // them: a patch that changes a row's LeveAssignmentType, a hand-edited or shared config
+        // file, or any future change to CraftFisherJobs all leave behind keys that no longer
+        // resolve. Practically every consumer of those two collections indexes
+        // LeveDictionary/CraftDictionary directly, so drop the unresolvable entries once, here,
+        // while LeveDictionary is authoritative - otherwise the first stale key surfaces as a
+        // KeyNotFoundException inside a draw loop or a scheduler task.
+        // Only the in-memory copy is pruned; the file on disk is left alone until the user saves.
+        var staleWork = C.workList.RemoveAll(e => !LeveDictionary.ContainsKey(e.LeveID) || !CraftDictionary.ContainsKey(e.LeveID));
+        if (staleWork > 0)
+            ECommons.Logging.PluginLog.Warning($"Dropped {staleWork} worklist entry/entries referencing leves that are not available on this client.");
+
+        foreach (var staleKey in C.LevePriority.Keys.Where(k => !LeveDictionary.ContainsKey(k)).ToList())
+            C.LevePriority.Remove(staleKey);
+
         foreach (var leveId in C.LevePriority)
         {
-            var leve = leveId.Key;
-            LeveDictionary[leve].Priority = leveId.Value; //
+            if (LeveDictionary.TryGetValue(leveId.Key, out var leveData))
+                leveData.Priority = leveId.Value;
         }
     }
 

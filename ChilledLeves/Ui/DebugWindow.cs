@@ -654,10 +654,16 @@ internal class DebugWindow : Window
 
         foreach (var leve in C.workList)
         {
+            // ViableLeves and LeveDictionary have different key sets (C.workList is persisted
+            // config, LeveDictionary is rebuilt from the sheet), so the ContainsKey above is
+            // not a guard for the lookup below. This runs inside Draw(): an unhandled
+            // KeyNotFoundException here takes the whole window down.
+            if (!LeveDictionary.TryGetValue(leve.LeveID, out var leveData))
+                continue;
+
             if (!ViableLeves.ContainsKey(leve.LeveID))
             {
-                string leveName = LeveDictionary[leve.LeveID].LeveName;
-                ViableLeves.Add(leve.LeveID, leveName);
+                ViableLeves.Add(leve.LeveID, leveData.LeveName);
             }
         }
         foreach (var leve in ViableLeves)

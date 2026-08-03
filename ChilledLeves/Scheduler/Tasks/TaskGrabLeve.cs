@@ -42,10 +42,16 @@ namespace ChilledLeves.Scheduler.Tasks
             FisherDictionary.Clear();
             foreach (var leve in C.workList)
             {
-                if (!FisherDictionary.ContainsKey(leve.LeveID) && LeveDictionary[leve.LeveID].JobAssignmentType == 4)
+                // FisherDictionary is cleared on entry, so its ContainsKey guard says nothing
+                // about LeveDictionary - the two have different key sets (C.workList is
+                // persisted config, LeveDictionary is rebuilt from the sheet). Skip anything we
+                // cannot resolve instead of throwing out of the task.
+                if (!LeveDictionary.TryGetValue(leve.LeveID, out var leveData))
+                    continue;
+
+                if (!FisherDictionary.ContainsKey(leve.LeveID) && leveData.JobAssignmentType == 4)
                 {
-                    string leveName = LeveDictionary[leve.LeveID].LeveName;
-                    FisherDictionary.Add(leve.LeveID, leveName);
+                    FisherDictionary.Add(leve.LeveID, leveData.LeveName);
                 }
             }
         }

@@ -32,10 +32,15 @@ namespace ChilledLeves.Scheduler.Tasks
             ViableLeves.Clear();
             foreach (var leve in C.workList)
             {
+                // ViableLeves is cleared on entry, so its ContainsKey guard says nothing about
+                // LeveDictionary - the two have different key sets (C.workList is persisted
+                // config, LeveDictionary is rebuilt from the sheet). Skip what we cannot resolve.
+                if (!LeveDictionary.TryGetValue(leve.LeveID, out var leveData))
+                    continue;
+
                 if (!ViableLeves.ContainsKey(leve.LeveID))
                 {
-                    string leveName = LeveDictionary[leve.LeveID].LeveName;
-                    ViableLeves.Add(leve.LeveID, leveName);
+                    ViableLeves.Add(leve.LeveID, leveData.LeveName);
                 }
             }
         }
