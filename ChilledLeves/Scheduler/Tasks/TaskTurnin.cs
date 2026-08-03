@@ -1,15 +1,24 @@
 ﻿using ChilledLeves.Scheduler.Handlers;
+using ECommons.Automation.NeoTaskManager;
 using ECommons.Throttlers;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 namespace ChilledLeves.Scheduler.Tasks
 {
     internal static class TaskTurnin
     {
+        /// <summary>
+        /// Waits that follow a turn-in must never abort the queue: <see cref="TaskUpdateWorkList"/> is
+        /// enqueued right after us by the caller, and dropping it would leave the leve in C.workList with
+        /// its counter un-decremented, which makes the scheduler re-accept a leve that was already
+        /// handed in (burning allowances). Timing out here only discards the wait itself.
+        /// </summary>
+        private static TaskManagerConfiguration WaitConfig => new(timeLimitMS: 20000, abortOnTimeout: false);
+
         internal static unsafe void Enqueue(string QuestName, uint leveID)
         {
             P.taskManager.Enqueue(() => Turnin(QuestName, leveID), "Turning in Leve", configuration: DConfig);
-            P.taskManager.Enqueue(() => !IsAccepted(leveID), "Waiting for leve to not be accepted");
-            P.taskManager.Enqueue(() => PlayerNotBusy(), "Waiting for player to not be busy");
+            P.taskManager.Enqueue(() => !IsAccepted(leveID), "Waiting for leve to not be accepted", configuration: WaitConfig);
+            P.taskManager.Enqueue(() => PlayerNotBusy(), "Waiting for player to not be busy", configuration: WaitConfig);
         }
 
         internal static unsafe bool? Turnin(string QuestName, uint leveID)
