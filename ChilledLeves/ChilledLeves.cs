@@ -40,6 +40,9 @@ public sealed class ChilledLeves : IDalamudPlugin
     {
         P = this;
         ECommonsMain.Init(pi, P, ECommons.Module.DalamudReflector, ECommons.Module.ObjectFunctions);
+        // 讓「呼叫了對方沒有的 IPC 方法」不再完全靜默。
+        // 訂閱越早越好：事件只在 IPC **呼叫**當下才被查閱，在這裡訂閱就涵蓋往後所有呼叫。
+        EzIpcFailureLog.Enable();
         ECommons.LanguageHelpers.Localization.Init("ChineseTraditional");
         new ECommons.Schedulers.TickScheduler(Load);
     }
@@ -103,6 +106,7 @@ public sealed class ChilledLeves : IDalamudPlugin
     {
         Safe(() => Svc.Framework.Update -= Tick);
         Safe(() => Svc.PluginInterface.UiBuilder.Draw -= windowSystem.Draw);
+        Safe(EzIpcFailureLog.Disable);
         ECommonsMain.Dispose();
         Safe(TextAdvancedManager.UnlockTA);
         Safe(YesAlreadyManager.Unlock);
