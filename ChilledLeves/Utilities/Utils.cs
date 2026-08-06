@@ -177,29 +177,51 @@ public static unsafe class Utils
     /// <returns></returns>
     public static unsafe string GetNodeText(string addonName, params int[] nodeNumbers)
     {
-
+        // 原本對 NodeList 索引完全沒有邊界檢查，也沒有檢查
+        // ((AtkComponentNode*)node)->Component 是否為 null，兩者都是
+        // AccessViolationException 入口(AVE 是 corrupted-state exception，try/catch 攔不到)。
+        // GetCallback 會用 i = 1..17 走訪 SelectIconString，實際項目較少時就會越界。
+        // 任何一層取不到就回空字串 —— 對呼叫端而言等同「這次沒讀到」，不會誤判成某個名稱。
         var ptr = Svc.GameGui.GetAddonByName(addonName, 1);
+        if (ptr.Address == nint.Zero)
+            return string.Empty;
 
         var addon = (AtkUnitBase*)ptr.Address;
-        var uld = addon->UldManager;
+        if (addon->UldManager.NodeList == null || addon->UldManager.NodeListCount == 0)
+            return string.Empty;
 
+        var uld = addon->UldManager;
         AtkResNode* node = null;
-        var debugString = string.Empty;
+
         for (var i = 0; i < nodeNumbers.Length; i++)
         {
             var nodeNumber = nodeNumbers[i];
 
-            var count = uld.NodeListCount;
+            if (nodeNumber < 0 || nodeNumber >= uld.NodeListCount)
+                return string.Empty;
 
             node = uld.NodeList[nodeNumber];
-            debugString += $"[{nodeNumber}]";
+            if (node == null)
+                return string.Empty;
 
             // More nodes to traverse
             if (i < nodeNumbers.Length - 1)
             {
-                uld = ((AtkComponentNode*)node)->Component->UldManager;
+                if (node->Type != NodeType.Component)
+                    return string.Empty;
+
+                var component = ((AtkComponentNode*)node)->Component;
+                if (component == null ||
+                    component->UldManager.NodeList == null ||
+                    component->UldManager.NodeListCount == 0)
+                    return string.Empty;
+
+                uld = component->UldManager;
             }
         }
+
+        if (node == null)
+            return string.Empty;
 
         if (node->Type == NodeType.Counter)
             return ((AtkCounterNode*)node)->NodeText.ToString();
@@ -226,9 +248,20 @@ public static unsafe class Utils
 
             if ((int)node->Type >= 1000)
             {
+                // Component 是指標欄位，元件尚未建立完成時為 null；
+                // NodeList 也可能是空的。兩者不擋都會 AccessViolationException。
                 var componentNode = node->GetAsAtkComponentNode();
+                if (componentNode == null)
+                    return null;
+
                 var component = componentNode->Component;
+                if (component == null)
+                    return null;
+
                 var uldManager = component->UldManager;
+                if (uldManager.NodeList == null || uldManager.NodeListCount == 0)
+                    return null;
+
                 childNode = uldManager.NodeList[0];
                 return childNode == null ? null : GetNodeByIDChain(childNode, [.. newList]);
             }
