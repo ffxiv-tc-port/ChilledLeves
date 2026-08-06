@@ -24,8 +24,50 @@ public unsafe class GuildLeve : AddonMasterBase<AddonGuildLeve>
     {
     }
 
-    public uint NumEntries => Addon->AtkValues[25].UInt;
-    public string SelectedLeve => MemoryHelper.ReadSeStringNullTerminated((nint)Addon->AtkValues[1233].String.Value).GetText();
+    /// <summary>
+    /// 取出第 index 個 AtkValue,取不到就回 null。
+    /// AtkValues 是原生指標陣列,沒有 C# 陣列的 Length 可以靠 —— 只驗 != null 等於沒驗上界,
+    /// 越界讀到的是堆積垃圾而不是 null,再把它當字串指標解參考就是攔不到的 AccessViolationException。
+    /// 上界的真值來源是 AtkUnitBase.AtkValuesCount(FieldOffset 0x1E2),本來就是為此存在的。
+    /// </summary>
+    private FFXIVClientStructs.FFXIV.Component.GUI.AtkValue* GetAtkValue(int index)
+    {
+        var addon = Addon;
+        if (addon == null)
+            return null;
+
+        var values = addon->AtkValues;
+        if (values == null || index < 0 || index >= addon->AtkValuesCount)
+            return null;
+
+        return &values[index];
+    }
+
+    /// <summary>
+    /// 讀出字串型 AtkValue 的內容;型別不符或指標為空就回 null。
+    /// 型別白名單沿用本檔 Levequests 原有的寫法。
+    /// </summary>
+    private static string? ReadAtkString(FFXIVClientStructs.FFXIV.Component.GUI.AtkValue* value)
+    {
+        if (value == null || !value->Type.EqualsAny(ValueType.String, ValueType.ManagedString, ValueType.String8))
+            return null;
+
+        var ptr = value->String.Value;
+        return ptr == null ? null : MemoryHelper.ReadSeStringNullTerminated((nint)ptr).GetText();
+    }
+
+    public uint NumEntries
+    {
+        get
+        {
+            // .UInt 只是讀 union 欄位、不解參考,所以這裡刻意不加型別檢查以維持原本行為;
+            // 唯一補的是「索引在不在陣列內」。取不到時回 0 = 沒有任何條目,呼叫端的迴圈自然不跑。
+            var value = GetAtkValue(25);
+            return value == null ? 0u : value->UInt;
+        }
+    }
+
+    public string SelectedLeve => ReadAtkString(GetAtkValue(1233)) ?? string.Empty;
 
     public Levequest[] Levequests
     {
@@ -34,24 +76,20 @@ public unsafe class GuildLeve : AddonMasterBase<AddonGuildLeve>
             var ret = new List<Levequest>();
             for (var i = 0; i < NumEntries; i++)
             {
-                var leveName = Addon->AtkValues[626 + i * 2];
-                var leveLevel = Addon->AtkValues[627 + i * 2];
-                if (leveName.Type.EqualsAny(ValueType.String, ValueType.ManagedString, ValueType.String8))
+                var leveName = ReadAtkString(GetAtkValue(626 + i * 2));
+                if (leveName == null)
                 {
-                    var leve = new Levequest(this, i)
-                    {
-                        Name = MemoryHelper.ReadSeStringNullTerminated((nint)leveName.String.Value).GetText()
-                    };
-                    if (leveLevel.Type.EqualsAny(ValueType.String, ValueType.ManagedString, ValueType.String8))
-                    {
-                        leve.Level = MemoryHelper.ReadSeStringNullTerminated((nint)leveLevel.String.Value).GetText();
-                    }
-                    ret.Add(leve);
-                }
-                else
-                {
+                    // 原本的寫法在型別不符時 break,這裡把「索引越界/addon 消失」也歸到同一條路徑:
+                    // 一律停止走訪,不回傳半截資料。
                     break;
                 }
+
+                var leve = new Levequest(this, i)
+                {
+                    Name = leveName
+                };
+                leve.Level = ReadAtkString(GetAtkValue(627 + i * 2));
+                ret.Add(leve);
             }
             return [.. ret];
         }
