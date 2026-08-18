@@ -275,7 +275,14 @@ public static unsafe class Utils
     }
     public static bool IsAddonActive(string AddonName) // Used to see if the addon is active/ready to be fired on
     {
-        var addon = RaptureAtkUnitManager.Instance()->GetAddonByName(AddonName);
+        // RaptureAtkUnitManager.Instance() 經 RaptureAtkModule 走 UIModule，UI 尚未建立時回 null
+        //（CS 手寫實作逐字是 raptureAtkModule == null ? null : &raptureAtkModule->RaptureAtkUnitManager）。
+        // 取不到就當作 addon 不存在——與下面 addon == null 完全相同的失敗形式。
+        var manager = RaptureAtkUnitManager.Instance();
+        if (manager == null)
+            return false;
+
+        var addon = manager->GetAddonByName(AddonName);
         return addon != null && addon->IsVisible && addon->IsReady;
     }
 
