@@ -147,10 +147,10 @@ internal class DebugWindow : Window
         {
             // Get the GameObjectId and display it in the ImGui.Text box
             ImGui.Text($"Name: {Svc.Targets.Target.Name}");
-            ImGui.Text($"{Svc.Targets.Target.DataId}");
+            ImGui.Text($"{Svc.Targets.Target.BaseId}");
             if (ImGui.Button("Copy DataID to clipboard"))
             {
-                ImGui.SetClipboardText($"{Svc.Targets.Target.DataId}");
+                ImGui.SetClipboardText($"{Svc.Targets.Target.BaseId}");
             }
             ImGui.Text($"Target Pos: {Svc.Targets.Target.Position}");
             if (ImGui.Button("Copy Target XYZ"))
@@ -740,7 +740,7 @@ internal class DebugWindow : Window
                     MathF.Round(x.Position.Z, 2)
                     );
 
-                ImGuiEx.Text($"Gathering Point: {x.DataId} |  Location: {rounded} | Distance: {GetDistanceToPlayer(x):N2} |  Targetable: {x.IsTargetable}");
+                ImGuiEx.Text($"Gathering Point: {x.BaseId} |  Location: {rounded} | Distance: {GetDistanceToPlayer(x):N2} |  Targetable: {x.IsTargetable}");
             }
         }
 
@@ -749,7 +749,7 @@ internal class DebugWindow : Window
             ImGui.Text("Gathering Test");
             ImGui.Text($"Current Integrity: {m.CurrentIntegrity}");
             ImGui.Text($"Total Integrity: {m.TotalIntegrity}");
-            ImGui.Text($"Node ID: {Svc.Targets.Target.DataId}");
+            ImGui.Text($"Node ID: {Svc.Targets.Target.BaseId}");
             ImGui.Text($"Type: {Svc.Targets.Target.ObjectKind}");
 
             foreach (var item in m.GatheredItems)

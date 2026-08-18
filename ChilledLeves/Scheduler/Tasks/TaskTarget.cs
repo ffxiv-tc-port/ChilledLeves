@@ -10,7 +10,7 @@
             // 已釋放的指標「寫進」遊戲的目標系統,比讀取更糟。
             ulong? resolvedId = null;
             P.taskManager.Enqueue(() => TryGetObjectIdByDataId(objectID, out resolvedId), "Getting Object");
-            P.taskManager.Enqueue(() => PluginVerbos($"Targeting By ID. Target is: {ResolveObject(resolvedId)?.DataId}"), "Plugin Verbos");
+            P.taskManager.Enqueue(() => PluginVerbos($"Targeting By ID. Target is: {ResolveObject(resolvedId)?.BaseId}"), "Plugin Verbos");
             P.taskManager.Enqueue(() => TargetgameObject(ResolveObject(resolvedId)), "Targeting Object");
         }
     }

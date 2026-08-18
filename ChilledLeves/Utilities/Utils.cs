@@ -41,10 +41,10 @@ public static unsafe class Utils
 
     internal static unsafe float GetDistanceToPlayer(Vector3 v3) => Vector3.Distance(v3, Player.GameObject->Position);
     internal static unsafe float GetDistanceToPlayer(IGameObject gameObject) => GetDistanceToPlayer(gameObject.Position);
-    public static uint GetClassJobId() => Svc.ClientState.LocalPlayer!.ClassJob.RowId;
+    public static uint GetClassJobId() => Svc.Objects.LocalPlayer!.ClassJob.RowId;
     public static unsafe int GetLevel(int expArrayIndex = -1)
     {
-        if (expArrayIndex == -1) expArrayIndex = Svc.ClientState.LocalPlayer?.ClassJob.Value.ExpArrayIndex ?? 0;
+        if (expArrayIndex == -1) expArrayIndex = Svc.Objects.LocalPlayer?.ClassJob.Value.ExpArrayIndex ?? 0;
         return UIState.Instance()->PlayerState.ClassJobLevels[expArrayIndex];
     }
     internal static unsafe short GetCurrentLevelFromSheet(Job? job = null)
@@ -105,23 +105,23 @@ public static unsafe class Utils
         if (x == null)
             return true;
 
-        if (Svc.Targets.Target != null && Svc.Targets.Target.DataId == x.DataId)
+        if (Svc.Targets.Target != null && Svc.Targets.Target.BaseId == x.BaseId)
             return true;
 
         if (!IsOccupied())
         {
             if (x != null)
             {
-                if (EzThrottler.Throttle($"Throttle Targeting {x.DataId}"))
+                if (EzThrottler.Throttle($"Throttle Targeting {x.BaseId}"))
                 {
                     Svc.Targets.SetTarget(x);
-                    ECommons.Logging.PluginLog.Information($"Setting the target to {x.DataId}");
+                    ECommons.Logging.PluginLog.Information($"Setting the target to {x.BaseId}");
                 }
             }
         }
         return false;
     }
-    internal static bool TryGetObjectByDataId(ulong dataId, out IGameObject? gameObject) => (gameObject = Svc.Objects.OrderBy(GetDistanceToPlayer).FirstOrDefault(x => x.DataId == dataId)) != null;
+    internal static bool TryGetObjectByDataId(ulong dataId, out IGameObject? gameObject) => (gameObject = Svc.Objects.OrderBy(GetDistanceToPlayer).FirstOrDefault(x => x.BaseId == dataId)) != null;
 
     // ⚠️ 不要把 IGameObject 捕獲進 TaskManager 的閉包跨幀用。
     // Dalamud 的 GameObject.Address 在建構時就凍結、永不重新解析
@@ -131,7 +131,7 @@ public static unsafe class Utils
     // 正解:閉包只捕獲 GameObjectId,每個任務執行時才重查物件表。
     internal static bool TryGetObjectIdByDataId(ulong dataId, out ulong? objectId)
     {
-        var obj = Svc.Objects.OrderBy(GetDistanceToPlayer).FirstOrDefault(x => x.DataId == dataId);
+        var obj = Svc.Objects.OrderBy(GetDistanceToPlayer).FirstOrDefault(x => x.BaseId == dataId);
         objectId = obj?.GameObjectId;
         return objectId != null;
     }
