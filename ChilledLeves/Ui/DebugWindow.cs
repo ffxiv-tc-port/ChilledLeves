@@ -109,7 +109,9 @@ internal class DebugWindow : Window
             ImGui.Text($"Leve: {leveName} | Dict Value: {entry.InputValue}");
         }
 
-        ImGui.Text($"{CurrentMap().ToString()}");
+        // 取不到 AgentMap 時 CurrentMap() 回 0 —— 把「不知道」畫成 0 會直接誤導,顯示 ? 。
+        var currentMapId = CurrentMap();
+        ImGui.Text(currentMapId == 0 ? "?" : currentMapId.ToString());
 
         ImGui.Text($"Pandora's Box: Auto-Select Turnin: {P.pandora.GetFeatureEnabled("Auto-select Turn-ins")}");
         ImGui.SameLine();

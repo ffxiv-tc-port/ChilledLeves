@@ -79,17 +79,49 @@ public static unsafe class Utils
         var terSheet = Svc.Data.GetExcelSheet<TerritoryType>();
         var mapId = terSheet.GetRow(teri).Map.Value.RowId;
 
-        var agent = AgentMap.Instance();
+        // 🔴 AgentMap.Instance() 由 [Agent(AgentId.Map)] 產生:內部鏈
+        //    AgentModule -> UIModule -> Framework,任一層回 null 整條就回 null(登入前、
+        //    切場景、登出後都是常態),底層 [StaticAddress]/[MemberFunction] 特徵碼失配時
+        //    改為擲 InvalidOperationException——兩種失效模式並存,缺一等於假防護。
+        //    裸解參考 null 原生指標是 AccessViolationException,在 .NET Core 屬
+        //    corrupted-state exception,try/catch 攔不到 ⇒ 只能事前判空。
+        //    這裡由 UI 按鈕觸發(低頻),所以判空後寫 Information 讓使用者回報得出來。
+        var agent = AgentMapOrNull();
+        if (agent == null)
+        {
+            ECommons.DalamudServices.Svc.Log.Information("[ChilledLeves] AgentMap 尚未就緒,本次插旗略過。");
+            return;
+        }
 
         agent->FlagMarkerCount = 0;
         agent->SetFlagMapMarker(teri, mapId, x, y);
         agent->OpenMapByMapId(mapId, territoryId: teri);
     }
 
+    /// <summary>
+    /// 取不到 AgentMap 時回 0。呼叫端(除錯視窗)必須把 0 顯示成「?」而不是畫成地圖 0,
+    /// 否則「不知道」會被誤讀成「地圖是 0」。
+    /// </summary>
     public static unsafe uint CurrentMap()
     {
-        var agent = AgentMap.Instance();
-        return agent->CurrentMapId;
+        var agent = AgentMapOrNull();
+        return agent == null ? 0u : agent->CurrentMapId;
+    }
+
+    /// <summary>
+    /// 把 <c>AgentMap.Instance()</c> 的兩種失效模式(回 null／擲 InvalidOperationException)
+    /// 統一成「回 null」,呼叫端一律判空就正確,不必知道底層屬於哪一類。
+    /// </summary>
+    private static unsafe AgentMap* AgentMapOrNull()
+    {
+        try
+        {
+            return AgentMap.Instance();
+        }
+        catch
+        {
+            return null;
+        }
     }
 
 
