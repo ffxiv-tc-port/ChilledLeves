@@ -22,7 +22,7 @@ namespace ChilledLeves.Ui;
 internal class DebugWindow : Window
 {
     public DebugWindow() :
-        base($"Chilled Leves Debug {P.GetType().Assembly.GetName().Version} ###ChilledLevesDebug") //
+        base($"Chilled Leves {"Debug".Loc()} {P.GetType().Assembly.GetName().Version} ###ChilledLevesDebug") //
     {
         Flags = ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoCollapse;
         SizeConstraints = new WindowSizeConstraints
@@ -60,7 +60,7 @@ internal class DebugWindow : Window
     private void MainDebug()
     {
         ImGui.Text($"CID: {SoundAlert.CID:X16}");
-        if (ImGui.Button("Copy CID"))
+        if (ImGui.Button("Copy CID".Loc()))
         {
             ImGui.SetClipboardText($"{SoundAlert.CID:X16}");
         }
@@ -74,24 +74,24 @@ internal class DebugWindow : Window
                 ClassID = 42;
         }
 
-        if (ImGui.Button("Class Change"))
+        if (ImGui.Button("Class Change".Loc()))
         {
             TaskClassChange.Enqueue((Job)ClassID);
         }
-        ImGui.Text($"Job Exp: {GetJobExp((uint)ClassID)}");
+        ImGui.Text($"{"Job Exp".Loc()}: {GetJobExp((uint)ClassID)}");
 
 
-        ImGui.Text($"Miner: {C.ShowMiner}");
-        ImGui.Text($"Botanist: {C.ShowBotanist}"); //
-        ImGui.Text($"Fisher: {C.ShowFisher}");
-        ImGui.Text($"Carpenter: {C.ShowCarpenter}");
-        ImGui.Text($"Blacksmith: {C.ShowBlacksmith}");
-        ImGui.Text($"Armorer: {C.ShowArmorer}");
-        ImGui.Text($"Goldsmith: {C.ShowGoldsmith}");
-        ImGui.Text($"Leatherworker {C.ShowLeatherworker}");
-        ImGui.Text($"Weaver: {C.ShowWeaver}");
-        ImGui.Text($"Alchemist: {C.ShowAlchemist}");
-        ImGui.Text($"Culinarian: {C.ShowCulinarian}");
+        ImGui.Text($"{"Miner".Loc()}: {C.ShowMiner}");
+        ImGui.Text($"{"Botanist".Loc()}: {C.ShowBotanist}"); //
+        ImGui.Text($"{"Fisher".Loc()}: {C.ShowFisher}");
+        ImGui.Text($"{"Carpenter".Loc()}: {C.ShowCarpenter}");
+        ImGui.Text($"{"Blacksmith".Loc()}: {C.ShowBlacksmith}");
+        ImGui.Text($"{"Armorer".Loc()}: {C.ShowArmorer}");
+        ImGui.Text($"{"Goldsmith".Loc()}: {C.ShowGoldsmith}");
+        ImGui.Text($"{"Leatherworker".Loc()} {C.ShowLeatherworker}");
+        ImGui.Text($"{"Weaver".Loc()}: {C.ShowWeaver}");
+        ImGui.Text($"{"Alchemist".Loc()}: {C.ShowAlchemist}");
+        ImGui.Text($"{"Culinarian".Loc()}: {C.ShowCulinarian}");
 
 
         foreach (var entry in C.workList)
@@ -106,38 +106,38 @@ internal class DebugWindow : Window
             ImGui.InputInt($"###LeveID Input {leve}", ref inputValue);
             entry.InputValue = inputValue;
             ImGui.SameLine();
-            ImGui.Text($"Leve: {leveName} | Dict Value: {entry.InputValue}");
+            ImGui.Text($"{"Leve".Loc()}: {leveName} | {"Dict Value".Loc()}: {entry.InputValue}");
         }
 
         // 取不到 AgentMap 時 CurrentMap() 回 0 —— 把「不知道」畫成 0 會直接誤導,顯示 ? 。
         var currentMapId = CurrentMap();
         ImGui.Text(currentMapId == 0 ? "?" : currentMapId.ToString());
 
-        ImGui.Text($"Pandora's Box: Auto-Select Turnin: {P.pandora.GetFeatureEnabled("Auto-select Turn-ins")}");
+        ImGui.Text($"Pandora's Box: {"Auto-Select Turnin".Loc()}: {P.pandora.GetFeatureEnabled("Auto-select Turn-ins")}");
         ImGui.SameLine();
-        if (ImGui.Button("Toggle Auto-Select Turn-ins"))
+        if (ImGui.Button("Toggle Auto-Select Turn-ins".Loc()))
         {
             P.pandora.PauseFeature("Auto-select Turn-ins", 1000);
         }
-        if (ImGui.Button("Toggle Auto-Select Turn-ins Config"))
+        if (ImGui.Button("Toggle Auto-Select Turn-ins Config".Loc()))
         {
             P.pandora.SetFeatureEnabled("Auto-select Turn-ins", false);
         }
-        ImGui.Text($"Pandora's Box: Auto-Select Turnin: {P.pandora.GetConfigEnabled("Auto-select Turn-ins", "AutoConfirm")}");
+        ImGui.Text($"Pandora's Box: {"Auto-Select Turnin".Loc()}: {P.pandora.GetConfigEnabled("Auto-select Turn-ins", "AutoConfirm")}");
     }
 
     public void TargetingDebug()
     {
         uint currentZone = CurrentTerritory();
-        if (ImGui.Button("Copy zoneID"))
+        if (ImGui.Button("Copy zoneID".Loc()))
         {
             ImGui.SetClipboardText($"ZoneID = {currentZone}");
         }
         ImGui.SameLine();
         ImGui.AlignTextToFramePadding();
-        ImGui.Text($"Zone ID: {currentZone}");
+        ImGui.Text($"{"Zone ID".Loc()}: {currentZone}");
 
-        if (ImGui.Button("Copy current POS"))
+        if (ImGui.Button("Copy current POS".Loc()))
         {
             ImGui.SetClipboardText($"{Player.Position.X}f, {Player.Position.Y}f, {Player.Position.Z}f,");
         }
@@ -148,14 +148,14 @@ internal class DebugWindow : Window
         if (Svc.Targets?.Target != null)
         {
             // Get the GameObjectId and display it in the ImGui.Text box
-            ImGui.Text($"Name: {Svc.Targets.Target.Name}");
+            ImGui.Text($"{"Name".Loc()}: {Svc.Targets.Target.Name}");
             ImGui.Text($"{Svc.Targets.Target.BaseId}");
-            if (ImGui.Button("Copy DataID to clipboard"))
+            if (ImGui.Button("Copy DataID to clipboard".Loc()))
             {
                 ImGui.SetClipboardText($"{Svc.Targets.Target.BaseId}");
             }
-            ImGui.Text($"Target Pos: {Svc.Targets.Target.Position}");
-            if (ImGui.Button("Copy Target XYZ"))
+            ImGui.Text($"{"Target Pos".Loc()}: {Svc.Targets.Target.Position}");
+            if (ImGui.Button("Copy Target XYZ".Loc()))
             {
                 Vector3 roundedVector = new Vector3(
                     MathF.Round(Svc.Targets.Target.Position.X, 2),
@@ -169,7 +169,7 @@ internal class DebugWindow : Window
         else
         {
             // Optionally display a message if no target is selected
-            ImGui.Text("No target selected.");
+            ImGui.Text("No target selected.".Loc());
         }
     }
 
@@ -177,14 +177,14 @@ internal class DebugWindow : Window
 
     public void TeleportTest()
     {
-        if (ImGui.Button("Mounting Test"))
+        if (ImGui.Button("Mounting Test".Loc()))
         {
             TaskMountUp.Enqueue();
         }
 
         ImGui.SameLine(0, 5);
 
-        if (ImGui.Button("Dismount"))
+        if (ImGui.Button("Dismount".Loc()))
         {
             TaskDisMount.Enqueue();
         }
@@ -193,7 +193,7 @@ internal class DebugWindow : Window
         {
 
             ImGui.SameLine();
-            if (ImGui.Button("Copy Target's X & Z"))
+            if (ImGui.Button("Copy Target's X & Z".Loc()))
                 ImGui.SetClipboardText($"{Svc.Targets.Target.Position.X}f, {Svc.Targets.Target.Position.Z}f");
         }
 
@@ -204,7 +204,7 @@ internal class DebugWindow : Window
         {
             var cursorPos = ImGui.GetCursorPos();
             ImGui.SetCursorPos(new System.Numerics.Vector2(cursorPos.X + 5, cursorPos.Y - ImGui.GetTextLineHeightWithSpacing()));
-            ImGui.TextDisabled("Zone Searching");
+            ImGui.TextDisabled("Zone Searching".Loc());
             ImGui.SetCursorPos(cursorPos); // Reset cursor to avoid overlap issues
         }
         ZoneSearch = ZoneSearch.Trim();
@@ -213,10 +213,10 @@ internal class DebugWindow : Window
         {
             if (ImGui.BeginTable("Debug Leve Table V2", 4, ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders | ImGuiTableFlags.Resizable))
             {
-                ImGui.TableSetupColumn("NPC Name", ImGuiTableColumnFlags.WidthFixed, 200);
-                ImGui.TableSetupColumn("Location", ImGuiTableColumnFlags.WidthFixed, 200);
-                ImGui.TableSetupColumn("Teleport", ImGuiTableColumnFlags.WidthFixed, 200);
-                ImGui.TableSetupColumn("Flag", ImGuiTableColumnFlags.WidthFixed, 75);
+                ImGui.TableSetupColumn("NPC Name".Loc(), ImGuiTableColumnFlags.WidthFixed, 200);
+                ImGui.TableSetupColumn("Location".Loc(), ImGuiTableColumnFlags.WidthFixed, 200);
+                ImGui.TableSetupColumn("Teleport".Loc(), ImGuiTableColumnFlags.WidthFixed, 200);
+                ImGui.TableSetupColumn("Flag".Loc(), ImGuiTableColumnFlags.WidthFixed, 75);
 
                 ImGui.TableHeadersRow();
 
@@ -262,7 +262,7 @@ internal class DebugWindow : Window
                     }
 
                     ImGui.TableNextColumn();
-                    if (ImGui.Button("Move to NPC"))
+                    if (ImGui.Button("Move to NPC".Loc()))
                     {
                         var NPCLocation = entry.Value.NPCInteractZone;
                         var NPCId = entry.Key;
@@ -316,7 +316,7 @@ internal class DebugWindow : Window
         {
             var cursorPos = ImGui.GetCursorPos();
             ImGui.SetCursorPos(new System.Numerics.Vector2(cursorPos.X + 5, cursorPos.Y - ImGui.GetTextLineHeightWithSpacing()));
-            ImGui.TextDisabled("Turnin NPC Search");
+            ImGui.TextDisabled("Turnin NPC Search".Loc());
             ImGui.SetCursorPos(cursorPos); // Reset cursor to avoid overlap issues
         }
         turninNPCResult = turninNPCResult.Trim();
@@ -327,7 +327,7 @@ internal class DebugWindow : Window
         {
             var cursorPos = ImGui.GetCursorPos();
             ImGui.SetCursorPos(new System.Numerics.Vector2(cursorPos.X + 5, cursorPos.Y - ImGui.GetTextLineHeightWithSpacing()));
-            ImGui.TextDisabled("Leve NPC Search");
+            ImGui.TextDisabled("Leve NPC Search".Loc());
             ImGui.SetCursorPos(cursorPos); // Reset cursor to avoid overlap issues
         }
         LeveNPCResult = LeveNPCResult.Trim();
@@ -338,19 +338,19 @@ internal class DebugWindow : Window
         {
             var cursorPos = ImGui.GetCursorPos();
             ImGui.SetCursorPos(new System.Numerics.Vector2(cursorPos.X + 5, cursorPos.Y - ImGui.GetTextLineHeightWithSpacing()));
-            ImGui.TextDisabled("Leve Name Search");
+            ImGui.TextDisabled("Leve Name Search".Loc());
             ImGui.SetCursorPos(cursorPos); // Reset cursor to avoid overlap issues
         }
         LeveNameSearch = LeveNameSearch.Trim();
 
         ImGui.SetNextItemWidth(125);
-        ImGui.InputInt("Gil Input", ref gilAmount);
+        ImGui.InputInt("Gil Input".Loc(), ref gilAmount);
 
         ImGui.SetNextItemWidth(300);
-        ImGui.SliderInt("Min Level", ref minLevel, 1, 98);
+        ImGui.SliderInt("Min Level".Loc(), ref minLevel, 1, 98);
 
         ImGui.SameLine();
-        if (ImGui.Button("Copy all leveIds"))
+        if (ImGui.Button("Copy all leveIds".Loc()))
         {
             // You now have a HashSet of visible leve IDs
             // You can store, print, or export them as needed
@@ -367,21 +367,21 @@ internal class DebugWindow : Window
 
         if (ImGui.BeginTable("NPC Info Table", 14, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.Resizable))
         {
-            ImGui.TableSetupColumn("Amount", ImGuiTableColumnFlags.WidthFixed, col1Width);
-            ImGui.TableSetupColumn("LeveID", ImGuiTableColumnFlags.WidthFixed, 50);
-            ImGui.TableSetupColumn("Leve Name", ImGuiTableColumnFlags.WidthFixed, col2Width);
-            ImGui.TableSetupColumn("Level", ImGuiTableColumnFlags.WidthFixed, col3Width);
-            ImGui.TableSetupColumn("JobType", ImGuiTableColumnFlags.WidthFixed, 50);
-            ImGui.TableSetupColumn("Leve Vendor Name");
-            ImGui.TableSetupColumn("Leve Turnin Vendor Name");
-            ImGui.TableSetupColumn("Zone Start");
-            ImGui.TableSetupColumn("Zone End");
-            ImGui.TableSetupColumn("Leve Cost");
-            ImGui.TableSetupColumn("EXP Reward");
-            ImGui.TableSetupColumn("Gil Reward");
-            ImGui.TableSetupColumn("Item Name");
-            ImGui.TableSetupColumn("Turnin Amount");
-            ImGui.TableSetupColumn("Current Amount");
+            ImGui.TableSetupColumn("Amount".Loc(), ImGuiTableColumnFlags.WidthFixed, col1Width);
+            ImGui.TableSetupColumn("LeveID".Loc(), ImGuiTableColumnFlags.WidthFixed, 50);
+            ImGui.TableSetupColumn("Leve Name".Loc(), ImGuiTableColumnFlags.WidthFixed, col2Width);
+            ImGui.TableSetupColumn("Level".Loc(), ImGuiTableColumnFlags.WidthFixed, col3Width);
+            ImGui.TableSetupColumn("JobType".Loc(), ImGuiTableColumnFlags.WidthFixed, 50);
+            ImGui.TableSetupColumn("Leve Vendor Name".Loc());
+            ImGui.TableSetupColumn("Leve Turnin Vendor Name".Loc());
+            ImGui.TableSetupColumn("Zone Start".Loc());
+            ImGui.TableSetupColumn("Zone End".Loc());
+            ImGui.TableSetupColumn("Leve Cost".Loc());
+            ImGui.TableSetupColumn("EXP Reward".Loc());
+            ImGui.TableSetupColumn("Gil Reward".Loc());
+            ImGui.TableSetupColumn("Item Name".Loc());
+            ImGui.TableSetupColumn("Turnin Amount".Loc());
+            ImGui.TableSetupColumn("Current Amount".Loc());
 
             ImGui.TableHeadersRow();
 
@@ -453,7 +453,7 @@ internal class DebugWindow : Window
                 if (ImGui.IsItemHovered())
                 {
                     ImGui.BeginTooltip();
-                    ImGui.Text("Amount that is currently set to run");
+                    ImGui.Text("Amount that is currently set to run".Loc());
                     ImGui.EndTooltip();
                 }
 
@@ -544,10 +544,10 @@ internal class DebugWindow : Window
         bool UlDahLeveNPC = IsMSQComplete(65856); // Way down in the hole
         bool GridaniaNPC = IsMSQComplete(65665); // Spirithold Broken
 
-        ImGui.Text("Started in:");
-        ImGui.Text($"Limsa?    -> {LimsaLeveNPC}");
-        ImGui.Text($"Ul' Dah? -> {UlDahLeveNPC}");
-        ImGui.Text($"Gridania -> {GridaniaNPC}");
+        ImGui.Text("Started in:".Loc());
+        ImGui.Text($"{"Limsa?".Loc()}    -> {LimsaLeveNPC}");
+        ImGui.Text($"{"Ul' Dah?".Loc()} -> {UlDahLeveNPC}");
+        ImGui.Text($"{"Gridania".Loc()} -> {GridaniaNPC}");
 
         // The 3 possible starting leves:
         bool levesofBentbranch = IsMSQComplete(65756); // Gridania startpoint
@@ -570,7 +570,7 @@ internal class DebugWindow : Window
                 return false;
         }
 
-        ImGui.Text($"Able to pick up leves from other locations: {BothQuest()}");
+        ImGui.Text($"{"Able to pick up leves from other locations".Loc()}: {BothQuest()}");
 
         ImGui.NewLine();
 
@@ -589,19 +589,20 @@ internal class DebugWindow : Window
         uint LevesofMoraby = 66231;
         uint LevesofCostadelSol = 66232;
 
-        ImGui.Text($"Wineport Unlocked: {CanDoLeves(LevesofWineport)}");
-        ImGui.Text($"Camp Bluefog Unlocked: {CanDoLeves(LevesofCampBluefog)}");
+        ImGui.Text($"{"Wineport Unlocked".Loc()}: {CanDoLeves(LevesofWineport)}");
+        ImGui.Text($"{"Camp Bluefog Unlocked".Loc()}: {CanDoLeves(LevesofCampBluefog)}");
+        // 地名未經台服 EXD 校驗，保留英文（The Observatorium／Saint Coinach's Find／Quarrymill／Camp Tranquil）
         ImGui.Text($"The Observatorium Unlocked: {CanDoLeves(LevesoftheObservatorium)}");
-        ImGui.Text($"Whitbrim Unlocked: {CanDoLeves(LevesofWhitbrim)}");
+        ImGui.Text($"{"Whitbrim Unlocked".Loc()}: {CanDoLeves(LevesofWhitbrim)}");
         ImGui.Text($"Staint Coinachs Find Unlocked: {CanDoLeves(LevesofSaintCoinachsFind)}");
-        ImGui.Text($"Hawthorne Unlocked: {CanDoLeves(LevesofHawthorne)}");
+        ImGui.Text($"{"Hawthorne Unlocked".Loc()}: {CanDoLeves(LevesofHawthorne)}");
         ImGui.Text($"Quarrymill Unlocked: {CanDoLeves(LevesofQuarrymill)}");
         ImGui.Text($"Camp Tranquil Unlocked: {CanDoLeves(LevesofCampTranquil)}");
-        ImGui.Text($"Camp Drybone Unlocked: {CanDoLeves(LevesofCampDrybone)}");
-        ImGui.Text($"Little Ala Mhigo Unlocked: {CanDoLeves(LevesofLittleAlaMhigo)}");
-        ImGui.Text($"Aleport Unlocked: {CanDoLeves(LevesofAleport)}");
-        ImGui.Text($"Moraby Unlocked: {CanDoLeves(LevesofMoraby)}");
-        ImGui.Text($"Costa del Sol Unlocked: {CanDoLeves(LevesofCostadelSol)}");
+        ImGui.Text($"{"Camp Drybone Unlocked".Loc()}: {CanDoLeves(LevesofCampDrybone)}");
+        ImGui.Text($"{"Little Ala Mhigo Unlocked".Loc()}: {CanDoLeves(LevesofLittleAlaMhigo)}");
+        ImGui.Text($"{"Aleport Unlocked".Loc()}: {CanDoLeves(LevesofAleport)}");
+        ImGui.Text($"{"Moraby Unlocked".Loc()}: {CanDoLeves(LevesofMoraby)}");
+        ImGui.Text($"{"Costa del Sol Unlocked".Loc()}: {CanDoLeves(LevesofCostadelSol)}");
 
         bool CanDoLeves(uint QuestRequired)
         {
@@ -649,7 +650,7 @@ internal class DebugWindow : Window
 
     public unsafe void LeveVendor()
     {
-        if (ImGui.Button("Clear Dictionary"))
+        if (ImGui.Button("Clear Dictionary".Loc()))
         {
             ViableLeves.Clear();
         }
@@ -670,15 +671,15 @@ internal class DebugWindow : Window
         }
         foreach (var leve in ViableLeves)
         {
-            ImGui.Text($"Leves in Dictionary: {leve.Value}");
+            ImGui.Text($"{"Leves in Dictionary".Loc()}: {leve.Value}");
         }
 
 
-        if (ImGui.CollapsingHeader("Debug"))
+        if (ImGui.CollapsingHeader("Debug".Loc()))
         {
             if (TryGetAddonMaster<GuildLeve>("GuildLeve", out var m) && m.IsAddonReady)
             {
-                ImGui.Text("All Available Leves:");
+                ImGui.Text("All Available Leves:".Loc());
                 foreach (var l in m.Levequests)
                 {
                     var leveMatch = ViableLeves.FirstOrDefault(v => v.Value == l.Name);
@@ -698,11 +699,11 @@ internal class DebugWindow : Window
                         ImGui.SetClipboardText(l.Name);
                     }
                     ImGui.SameLine();
-                    if (ImGui.SmallButton("Select##" + l.Name)) l.Select();
+                    if (ImGui.SmallButton("Select".Loc() + "##" + l.Name)) l.Select();
                 }
                 ref var r = ref Ref<int>.Get("Leve");
                 ImGui.InputInt("id", ref r);
-                if (ImGui.Button("Callback"))
+                if (ImGui.Button("Callback".Loc()))
                 {
                     ECommons.Automation.Callback.Fire(m.Base, true, 13, 1, r);
                 }
@@ -710,7 +711,7 @@ internal class DebugWindow : Window
                 {
                     if (det.CanInitiate)
                     {
-                        if (ImGui.Button("Initiate")) det.Initiate();
+                        if (ImGui.Button("Initiate".Loc())) det.Initiate();
                     }
                 }
             }
@@ -725,12 +726,12 @@ internal class DebugWindow : Window
 
     public void GatheringTest()
     {
-        ImGui.Text("Statuses");
-        ImGui.Text($"Gathering [Normal]: {Svc.Condition[ConditionFlag.Gathering]}");
-        ImGuiEx.HelpMarker("Interacting with Gathering Node", sameLine: true);
+        ImGui.Text("Statuses".Loc());
+        ImGui.Text($"{"Gathering".Loc()} [Normal]: {Svc.Condition[ConditionFlag.Gathering]}");
+        ImGuiEx.HelpMarker("Interacting with Gathering Node".Loc(), sameLine: true);
 
-        ImGui.Text($"Gathering [Gathering42] {Svc.Condition[ConditionFlag.ExecutingGatheringAction]}");
-        ImGuiEx.HelpMarker("Interacting with Gathering Node/Using Buffs", sameLine: true);
+        ImGui.Text($"{"Gathering".Loc()} [Gathering42] {Svc.Condition[ConditionFlag.ExecutingGatheringAction]}");
+        ImGuiEx.HelpMarker("Interacting with Gathering Node/Using Buffs".Loc(), sameLine: true);
 
         foreach (var x in Svc.Objects)
         {
@@ -742,17 +743,17 @@ internal class DebugWindow : Window
                     MathF.Round(x.Position.Z, 2)
                     );
 
-                ImGuiEx.Text($"Gathering Point: {x.BaseId} |  Location: {rounded} | Distance: {GetDistanceToPlayer(x):N2} |  Targetable: {x.IsTargetable}");
+                ImGuiEx.Text($"{"Gathering Point".Loc()}: {x.BaseId} |  {"Location".Loc()}: {rounded} | {"Distance".Loc()}: {GetDistanceToPlayer(x):N2} |  {"Targetable".Loc()}: {x.IsTargetable}");
             }
         }
 
         if (TryGetAddonMaster<AddonMaster.Gathering>("Gathering", out var m) && m.IsAddonReady)
         {
-            ImGui.Text("Gathering Test");
-            ImGui.Text($"Current Integrity: {m.CurrentIntegrity}");
-            ImGui.Text($"Total Integrity: {m.TotalIntegrity}");
-            ImGui.Text($"Node ID: {Svc.Targets.Target.BaseId}");
-            ImGui.Text($"Type: {Svc.Targets.Target.ObjectKind}");
+            ImGui.Text("Gathering Test".Loc());
+            ImGui.Text($"{"Current Integrity".Loc()}: {m.CurrentIntegrity}");
+            ImGui.Text($"{"Total Integrity".Loc()}: {m.TotalIntegrity}");
+            ImGui.Text($"{"Node ID".Loc()}: {Svc.Targets.Target.BaseId}");
+            ImGui.Text($"{"Type".Loc()}: {Svc.Targets.Target.ObjectKind}");
 
             foreach (var item in m.GatheredItems)
             {
@@ -760,9 +761,9 @@ internal class DebugWindow : Window
                     continue;
 
                 ImGui.Text($"{item.ItemName} ID: ({item.ItemID})");
-                ImGui.Text($"Gathering Chance: {item.GatherChance} | Boon %%: {item.BoonChance}");
+                ImGui.Text($"{"Gathering Chance".Loc()}: {item.GatherChance} | {"Boon".Loc()} %%: {item.BoonChance}");
                 ImGui.SameLine();
-                if (ImGui.Button("Select##" + item.ItemName)) item.Gather();
+                if (ImGui.Button("Select".Loc() + "##" + item.ItemName)) item.Gather();
             }
         }
     }
@@ -791,7 +792,7 @@ internal class DebugWindow : Window
         var LeveSheet = Svc.Data.GetExcelSheet<Leve>();
         var RecipeSheet = Svc.Data.GetExcelSheet<Recipe>();
 
-        if (ImGui.Button("Update Item List"))
+        if (ImGui.Button("Update Item List".Loc()))
         {
             AllItems.Clear();
             ArtisanPreCrafts.Clear();
@@ -829,30 +830,30 @@ internal class DebugWindow : Window
             }
         }
 
-        ImGui.Text("- - - All Items - - - ");
+        ImGui.Text("- - - All Items - - - ".Loc());
         foreach (var item in AllItems)
         {
             var itemName = Svc.Data.GetExcelSheet<Item>().GetRow(item.Key).Name.ToString();
 
-            ImGui.Text($"Item ID [{item.Key}]: {itemName} | Amount: {item.Value}");
+            ImGui.Text($"Item ID [{item.Key}]: {itemName} | {"Amount".Loc()}: {item.Value}");
         }
 
-        ImGui.Text("- - - Artisan Pre Crafts - - -");
+        ImGui.Text("- - - Artisan Pre Crafts - - -".Loc());
         foreach (var item in ArtisanPreCrafts)
         {
             var itemName = Svc.Data.GetExcelSheet<Item>().GetRow(item.Key).Name.ToString();
 
-            ImGui.Text($"Item ID: {itemName} | Amount: {item.Value}");
+            ImGui.Text($"Item ID: {itemName} | {"Amount".Loc()}: {item.Value}");
         }
 
         ImGui.Spacing();
 
-        ImGui.Text("- - - Artisan Final Crafts - - -");
+        ImGui.Text("- - - Artisan Final Crafts - - -".Loc());
         foreach (var item in ArtisanFinalCrafts)
         {
             var itemName = Svc.Data.GetExcelSheet<Item>().GetRow(item.Key).Name.ToString();
 
-            ImGui.Text($"Item ID: {itemName} | Amount: {item.Value}");
+            ImGui.Text($"Item ID: {itemName} | {"Amount".Loc()}: {item.Value}");
         }
     }
 
