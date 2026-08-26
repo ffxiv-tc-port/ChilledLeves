@@ -175,6 +175,12 @@ public sealed class ChilledLeves : IDalamudPlugin
         }
         else if (firstArg.ToLower() == "start")
         {
+            // 上游 20165e2 是把 WorkListMode = true 塞進 EnablePlugin() 本體(commit 訊息自稱 "temp")。
+            // 我方不照抄:採集模式啟動鈕是「WorkListMode = false → GatheringMode = true → EnablePlugin()」,
+            // 那樣改會讓 EnablePlugin() 反手把剛設成 false 的 WorkListMode 又打開,
+            // 而 Tick() 的分派是 if (WorkListMode) ... else if (GatheringMode) —— 採集模式會靜默永遠跑不到。
+            // 改在呼叫端設定,與其餘三個工作清單啟動點(MainWindow / WorkListUi ×2)寫法一致。
+            SchedulerMain.WorkListMode = true;
             SchedulerMain.EnablePlugin();
             PluginVerbos("Starting the turnin process");
             return;
