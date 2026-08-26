@@ -125,7 +125,7 @@ namespace ChilledLeves.Ui
             float leftPanelWidth = Math.Max(220, textLineHeight * 14);
             ImGui.SetColumnWidth(0, leftPanelWidth);
 
-            HeaderText("Controls");
+            HeaderText("Controls".Loc());
             ImGui.NextColumn();
 
             // Middle panel header - dynamically sized based on font metrics
@@ -134,17 +134,17 @@ namespace ChilledLeves.Ui
             string ShowingCount = "";
             if (C.OnlyFavorites)
             {
-                ShowingCount = $"Showing: {C.FavoriteLeves.Count} out of {LeveDictionary.Count}";
+                ShowingCount = "Showing: ?? out of ??".Loc(C.FavoriteLeves.Count, LeveDictionary.Count);
             }
             else
             {
-                ShowingCount = $"Showing: {VisibleLeves.Count} out of {LeveDictionary.Count}";
+                ShowingCount = "Showing: ?? out of ??".Loc(VisibleLeves.Count, LeveDictionary.Count);
             }
             HeaderText(ShowingCount);
             ImGui.NextColumn();
 
             // Right panel header
-            HeaderText("Selected Leve Details");
+            HeaderText("Selected Leve Details".Loc());
             ImGui.NextColumn();
 
             // Reset columns in order to begin actual panel content
@@ -161,10 +161,10 @@ namespace ChilledLeves.Ui
                 // Start and Stop buttons 
                 using (ImRaii.Disabled(SchedulerMain.AreWeTicking))
                 {
-                    if (!HasPlugin("vnavmesh"))
+                    if (!P.navmesh.Ready)
                     {
                         // Check if button is clicked
-                        if (ImGui.Button(buttonText, new Vector2(ImGui.GetContentRegionAvail().X, textLineHeight * 1.5f)))
+                        if (ImGui.Button(buttonText.Loc(), new Vector2(ImGui.GetContentRegionAvail().X, textLineHeight * 1.5f)))
                         {
                             ImGui.SetClipboardText("https://puni.sh/api/repository/veyn");
                             buttonText = "Copied to Clipboard";
@@ -174,7 +174,7 @@ namespace ChilledLeves.Ui
                         if (ImGui.IsItemHovered())
                         {
                             ImGui.BeginTooltip();
-                            ImGui.Text("Press the button to copy the repo to your clipboard");
+                            ImGui.Text("Press the button to copy the repo to your clipboard".Loc());
                             ImGui.EndTooltip();
                         }
 
@@ -184,9 +184,9 @@ namespace ChilledLeves.Ui
                             buttonText = "Need Navmesh Installed";
                         }
                     }
-                    else if (HasPlugin("vnavmesh"))
+                    else if (P.navmesh.Ready)
                     {
-                        if (ImGui.Button("Start", new Vector2(ImGui.GetContentRegionAvail().X, textLineHeight * 1.5f)))
+                        if (ImGui.Button("Start".Loc(), new Vector2(ImGui.GetContentRegionAvail().X, textLineHeight * 1.5f)))
                         {
                             SchedulerMain.WorkListMode = true;
                             SchedulerMain.EnablePlugin();
@@ -195,18 +195,18 @@ namespace ChilledLeves.Ui
                 }
                 using (ImRaii.Disabled(!SchedulerMain.AreWeTicking))
                 {
-                    if (ImGui.Button("Stop", new Vector2(ImGui.GetContentRegionAvail().X, textLineHeight * 1.5f)))
+                    if (ImGui.Button("Stop".Loc(), new Vector2(ImGui.GetContentRegionAvail().X, textLineHeight * 1.5f)))
                     {
                         SchedulerMain.DisablePlugin();
                     }
                 }
 
                 // Two extra plugin UI toggles: Worklist and Gathering Grind.
-                if (ImGui.Button("Open Worklist", new Vector2(ImGui.GetContentRegionAvail().X, textLineHeight * 1.5f)))
+                if (ImGui.Button("Open Worklist".Loc(), new Vector2(ImGui.GetContentRegionAvail().X, textLineHeight * 1.5f)))
                 {
                     P.workListUi.IsOpen = !P.workListUi.IsOpen;
                 }
-                if (ImGui.Button("Open Priority Leve Grind", new Vector2(ImGui.GetContentRegionAvail().X, textLineHeight * 1.5f)))
+                if (ImGui.Button("Open Priority Leve Grind".Loc(), new Vector2(ImGui.GetContentRegionAvail().X, textLineHeight * 1.5f)))
                 {
                     P.gatherModeUi.IsOpen = !P.gatherModeUi.IsOpen;
                 }
@@ -216,7 +216,7 @@ namespace ChilledLeves.Ui
                 ImGui.Spacing();
 
                 bool useIceTheme = C.UseIceTheme;
-                if (ImGui.Checkbox("Use Ice Theme", ref useIceTheme))
+                if (ImGui.Checkbox("Use Ice Theme".Loc(), ref useIceTheme))
                 {
                     C.UseIceTheme = useIceTheme;
                     C.Save();
@@ -226,11 +226,11 @@ namespace ChilledLeves.Ui
                 if (ImGui.IsItemHovered())
                 {
                     ImGui.BeginTooltip();
-                    ImGui.Text("Toggle between custom ice theme and Dalamud's default theme");
+                    ImGui.Text("Toggle between custom ice theme and Dalamud's default theme".Loc());
                     ImGui.EndTooltip();
                 }
                 bool RapidImport = C.RapidImport;
-                if (ImGui.Checkbox("Rapid Import Leves", ref RapidImport))
+                if (ImGui.Checkbox("Rapid Import Leves".Loc(), ref RapidImport))
                 {
                     C.RapidImport = RapidImport;
                     C.Save();
@@ -240,11 +240,11 @@ namespace ChilledLeves.Ui
                 if (ImGui.IsItemHovered())
                 {
                     ImGui.BeginTooltip();
-                    ImGui.Text("When you left click a leve, will immediately add it to your worklist");
-                    ImGui.Text("While this is disabled, you can also double click to add a leve as well!");
+                    ImGui.Text("When you left click a leve, will immediately add it to your worklist".Loc());
+                    ImGui.Text("While this is disabled, you can also double click to add a leve as well!".Loc());
                     ImGui.EndTooltip();
                 }
-                if (ImGui.Button("Alert Settings", new Vector2(ImGui.GetContentRegionAvail().X, textLineHeight * 1.5f)))
+                if (ImGui.Button("Alert Settings".Loc(), new Vector2(ImGui.GetContentRegionAvail().X, textLineHeight * 1.5f)))
                 {
                     P.alertSettings.IsOpen = true;
                 }
@@ -252,17 +252,17 @@ namespace ChilledLeves.Ui
                 ImGui.Spacing();
                 ImGui.Spacing();
 
-                HeaderText("Filter Leves");
+                HeaderText("Filter Leves".Loc());
                 ImGui.Separator();
 
                 ImGui.Spacing();
-                BodyText("Filter Options");
+                BodyText("Filter Options".Loc());
                 ImGui.Spacing();
 
                 #region Favorites Checkbox
 
                 bool showFavorites = C.OnlyFavorites;
-                if (ImGui.Checkbox("Show Favorites Only", ref showFavorites))
+                if (ImGui.Checkbox("Show Favorites Only".Loc(), ref showFavorites))
                 {
                     C.OnlyFavorites = showFavorites;
                     if (showFavorites)
@@ -274,7 +274,7 @@ namespace ChilledLeves.Ui
                 if (ImGui.IsItemHovered())
                 {
                     ImGui.BeginTooltip();
-                    ImGui.Text("Show only leves marked as favorites");
+                    ImGui.Text("Show only leves marked as favorites".Loc());
                     ImGui.EndTooltip();
                 }
 
@@ -283,7 +283,7 @@ namespace ChilledLeves.Ui
                 #region Show Completed
                 int completeFilter = (int)C.CompleteFilter;
                 bool showCompleted = completeFilter == 1;
-                if (ImGui.Checkbox("Show Completed Only", ref showCompleted))
+                if (ImGui.Checkbox("Show Completed Only".Loc(), ref showCompleted))
                 {
                     C.CompleteFilter = showCompleted ? 1u : 0u;
                     if (showCompleted)
@@ -297,7 +297,7 @@ namespace ChilledLeves.Ui
                 if (ImGui.IsItemHovered())
                 {
                     ImGui.BeginTooltip();
-                    ImGui.Text("Show only completed leves");
+                    ImGui.Text("Show only completed leves".Loc());
                     ImGui.EndTooltip();
                 }
 
@@ -306,7 +306,7 @@ namespace ChilledLeves.Ui
                 #region Show Incomplete
 
                 bool showIncomplete = completeFilter == 2;
-                if (ImGui.Checkbox("Show Incomplete Only", ref showIncomplete))
+                if (ImGui.Checkbox("Show Incomplete Only".Loc(), ref showIncomplete))
                 {
                     C.CompleteFilter = showIncomplete ? 2u : 0u;
                     if (showIncomplete)
@@ -320,7 +320,7 @@ namespace ChilledLeves.Ui
                 if (ImGui.IsItemHovered())
                 {
                     ImGui.BeginTooltip();
-                    ImGui.Text("Show only incomplete leves");
+                    ImGui.Text("Show only incomplete leves".Loc());
                     ImGui.EndTooltip();
                 }
 
@@ -330,7 +330,7 @@ namespace ChilledLeves.Ui
 
                 // Reset all filters button
                 ImGui.Spacing();
-                if (ImGui.Button("Reset All Filters", new Vector2(ImGui.GetContentRegionAvail().X * 0.9f, 0)))
+                if (ImGui.Button("Reset All Filters".Loc(), new Vector2(ImGui.GetContentRegionAvail().X * 0.9f, 0)))
                 {
                     C.OnlyFavorites = false;
                     C.CompleteFilter = 0;
@@ -358,7 +358,7 @@ namespace ChilledLeves.Ui
                 if (ImGui.IsItemHovered())
                 {
                     ImGui.BeginTooltip();
-                    ImGui.Text("Clear all active filters");
+                    ImGui.Text("Clear all active filters".Loc());
                     ImGui.EndTooltip();
                 }
 
@@ -368,12 +368,12 @@ namespace ChilledLeves.Ui
 
                 #region Job Filters
 
-                HeaderText("Job Filters");
+                HeaderText("Job Filters".Loc());
                 ImGui.Separator();
 
                 // Crafters
                 ImGui.Spacing();
-                BodyText("Crafters:");
+                BodyText("Crafters:".Loc());
                 ImGui.Spacing();
 
                 float iconSize = 32;
@@ -404,7 +404,7 @@ namespace ChilledLeves.Ui
 
                 // Gatherers
                 ImGui.Spacing();
-                BodyText("Gatherers:");
+                BodyText("Gatherers:".Loc());
                 ImGui.Spacing();
 
                 ImGui.SetCursorPosX(startX);
@@ -416,7 +416,7 @@ namespace ChilledLeves.Ui
                 if (ImGui.IsItemHovered())
                 {
                     ImGui.BeginTooltip();
-                    ImGui.Text("These aren't supported yet, but will be in a future update!");
+                    ImGui.Text("These aren't supported yet, but will be in a future update!".Loc());
                     ImGui.EndTooltip();
                 }
                 ImGui.SameLine(0, iconSpacing);
@@ -424,7 +424,7 @@ namespace ChilledLeves.Ui
                 if (ImGui.IsItemHovered())
                 {
                     ImGui.BeginTooltip();
-                    ImGui.Text("These aren't supported yet, but will be in a future update!");
+                    ImGui.Text("These aren't supported yet, but will be in a future update!".Loc());
                     ImGui.EndTooltip();
                 }
 
@@ -436,7 +436,7 @@ namespace ChilledLeves.Ui
                 ImGui.Spacing();
                 ImGui.Spacing();
 
-                ImGui.Text("Additional Filters");
+                ImGui.Text("Additional Filters".Loc());
 
                 ImGui.Separator();
                 ImGui.Spacing();
@@ -453,8 +453,8 @@ namespace ChilledLeves.Ui
                     ImGui.TableSetColumnIndex(0);
                     // Level filter
                     ImGui.AlignTextToFramePadding();
-                    ImGui.Text("Level:");
-                    FilterSize1 = Math.Max(ImGui.CalcTextSize("Level:").X, FilterSize1);
+                    ImGui.Text("Level:".Loc());
+                    FilterSize1 = Math.Max(ImGui.CalcTextSize("Level:".Loc()).X, FilterSize1);
 
                     ImGui.TableNextColumn();
                     var level = C.LevelFilter > 0 ? C.LevelFilter.ToString() : "";
@@ -471,8 +471,8 @@ namespace ChilledLeves.Ui
                     // Name filter
                     ImGui.TableSetColumnIndex(0);
                     ImGui.AlignTextToFramePadding();
-                    ImGui.Text("Name:");
-                    FilterSize1 = Math.Max(ImGui.CalcTextSize("Name:").X, FilterSize1);
+                    ImGui.Text("Name:".Loc());
+                    FilterSize1 = Math.Max(ImGui.CalcTextSize("Name:".Loc()).X, FilterSize1);
 
                     ImGui.TableNextColumn();
 
@@ -595,20 +595,20 @@ namespace ChilledLeves.Ui
                     {
                         ImGui.SetClipboardText(LeveDictionary[leve].LeveName);
                     }
-                    ImGui.TextDisabled($"LeveID: {leve}");
+                    ImGui.TextDisabled("LeveID: ??".Loc(leve));
                     ImGui.Separator();
 
                     // Rewards section
-                    ImGui.Text("Rewards");
+                    ImGui.Text("Rewards".Loc());
 
                     ImGui.BeginTable("reward_table", 2, ImGuiTableFlags.SizingFixedFit);
                     ImGui.TableNextColumn();
-                    ImGui.Text("EXP Reward:");
+                    ImGui.Text("EXP Reward:".Loc());
                     ImGui.TableNextColumn();
                     ImGui.Text($"{LeveDictionary[leve].ExpReward:N0}");
                     ImGui.TableNextRow();
                     ImGui.TableNextColumn();
-                    ImGui.Text("Gil Reward:");
+                    ImGui.Text("Gil Reward:".Loc());
                     ImGui.TableNextColumn();
                     ImGui.Text($"{LeveDictionary[leve].GilReward:N0} ± 5%");
                     ImGui.EndTable();
@@ -616,20 +616,20 @@ namespace ChilledLeves.Ui
                     ImGui.Separator();
 
                     // Location
-                    ImGui.Text("Location");
+                    ImGui.Text("Location".Loc());
 
                     var vendorId = LeveDictionary[leve].LeveVendorID;
                     var startZoneId = LeveNPCDict[vendorId].ZoneID;
 
                     ImGui.BeginTable("location_table", 2, ImGuiTableFlags.SizingFixedFit);
                     ImGui.TableNextColumn();
-                    ImGui.Text("Starting Zone:");
+                    ImGui.Text("Starting Zone:".Loc());
                     ImGui.TableNextColumn();
                     ImGui.Text($"{ZoneName(startZoneId)}");
                     ImGui.TableNextRow();
                     ImGui.TableNextColumn();
                     ImGui.AlignTextToFramePadding();
-                    ImGui.Text("NPC:");
+                    ImGui.Text("NPC:".Loc());
                     ImGui.TableNextColumn();
 
                     if (ImGui.Button($"{LeveDictionary[leve].LeveVendorName}###NPC"))
@@ -644,10 +644,10 @@ namespace ChilledLeves.Ui
                     if (CraftFisherJobs.Contains(JobAssignment))
                     {
                         uint turninNPCId = CraftDictionary[leve].LeveTurninVendorID;
-                        string turninName = turninNPCId != 0 ? NPCName(turninNPCId) : "not valid";
+                        string turninName = turninNPCId != 0 ? NPCName(turninNPCId) : "not valid".Loc();
                         ImGui.TableNextColumn();
                         ImGui.AlignTextToFramePadding();
-                        ImGui.Text("Turnin NPC:");
+                        ImGui.Text("Turnin NPC:".Loc());
                         ImGui.TableNextColumn();
 
                         if (turninNPCId != 0)
@@ -673,11 +673,11 @@ namespace ChilledLeves.Ui
                     ImGui.Separator();
 
                     // Status
-                    HeaderText("Status");
+                    HeaderText("Status".Loc());
 
                     ImGui.BeginTable("status_table", 2, ImGuiTableFlags.SizingFixedFit);
                     ImGui.TableNextColumn();
-                    ImGui.Text("Is Complete:");
+                    ImGui.Text("Is Complete:".Loc());
                     ImGui.TableNextColumn();
                     if (IsComplete(leve))
                     {
@@ -695,9 +695,9 @@ namespace ChilledLeves.Ui
                     {
                         ImGui.TableNextRow();
                         ImGui.TableNextColumn();
-                        ImGui.Text("Quest Status:");
+                        ImGui.Text("Quest Status:".Loc());
                         ImGui.TableNextColumn();
-                        ImGui.TextColored(new Vector4(0.0f, 0.8f, 0.2f, 1.0f), "Accepted");
+                        ImGui.TextColored(new Vector4(0.0f, 0.8f, 0.2f, 1.0f), "Accepted".Loc());
                     }
                     ImGui.EndTable();
 
@@ -705,7 +705,7 @@ namespace ChilledLeves.Ui
                     if (CraftFisherJobs.Contains(JobAssignment))
                     {
                         ImGui.Separator();
-                        HeaderText("Required Items");
+                        HeaderText("Required Items".Loc());
 
                         ImGui.BeginChild("###ItemInfo", new Vector2(ImGui.GetContentRegionAvail().X, 50), true);
 
@@ -729,7 +729,7 @@ namespace ChilledLeves.Ui
                     ImGui.PushID((int)leve);
 
                     // Favorite add/remove
-                    if (ImGui.Button(C.FavoriteLeves.Contains(leve) ? "Remove from Favorites" : "Add to Favorites",
+                    if (ImGui.Button(C.FavoriteLeves.Contains(leve) ? "Remove from Favorites".Loc() : "Add to Favorites".Loc(),
                                      new Vector2(ImGui.GetContentRegionAvail().X, 0)))
                     {
                         if (C.FavoriteLeves.Contains(leve))
@@ -757,7 +757,7 @@ namespace ChilledLeves.Ui
                     { */
                     if (C.workList.Any(e => e.LeveID == leve))
                     {
-                        if (ImGui.Button("Remove from WorkList", new Vector2(ImGui.GetContentRegionAvail().X, 0)))
+                        if (ImGui.Button("Remove from WorkList".Loc(), new Vector2(ImGui.GetContentRegionAvail().X, 0)))
                         {
                             C.workList.RemoveAll(e => e.LeveID == leve);
                             C.Save();
@@ -765,7 +765,7 @@ namespace ChilledLeves.Ui
                     }
                     else
                     {
-                        if (ImGui.Button("Add to WorkList", new Vector2(ImGui.GetContentRegionAvail().X, 0)))
+                        if (ImGui.Button("Add to WorkList".Loc(), new Vector2(ImGui.GetContentRegionAvail().X, 0)))
                         {
                             C.workList.Add(new LeveEntry { LeveID = leve, InputValue = 1 });
                             C.Save();
@@ -846,19 +846,19 @@ namespace ChilledLeves.Ui
                     // If none is selected
                     float centerY = ImGui.GetWindowHeight() * 0.4f;
                     ImGui.SetCursorPosY(centerY);
-                    float textWidth = ImGui.CalcTextSize("No Leve Selected").X;
+                    float textWidth = ImGui.CalcTextSize("No Leve Selected".Loc()).X;
                     ImGui.SetCursorPosX((ImGui.GetWindowWidth() - textWidth) * 0.5f);
                     if (usingIceTheme)
                     {
-                        ImGui.TextColored(new Vector4(0.7f, 0.85f, 1.0f, 0.7f), "No Leve Selected");
+                        ImGui.TextColored(new Vector4(0.7f, 0.85f, 1.0f, 0.7f), "No Leve Selected".Loc());
                     }
                     else
                     {
-                        ImGui.TextDisabled("No Leve Selected");
+                        ImGui.TextDisabled("No Leve Selected".Loc());
                     }
                     ImGui.Spacing();
                     ImGui.Spacing();
-                    string hintText = "Select a leve from the list to view details";
+                    string hintText = "Select a leve from the list to view details".Loc();
                     float hintWidth = ImGui.CalcTextSize(hintText).X;
                     ImGui.SetCursorPosX((ImGui.GetWindowWidth() - hintWidth) * 0.5f);
                     ImGui.TextDisabled(hintText);
@@ -955,8 +955,8 @@ namespace ChilledLeves.Ui
             if (ImGui.IsItemHovered())
             {
                 ImGui.BeginTooltip();
-                ImGui.Text($"{tooltip} Leves");
-                ImGui.Text($"Showing: {state}");
+                ImGui.Text("?? Leves".Loc(tooltip.Loc()));
+                ImGui.Text("Showing: ??".Loc(state));
                 ImGui.EndTooltip();
             }
 
@@ -1065,8 +1065,8 @@ namespace ChilledLeves.Ui
             if (ImGui.IsItemHovered())
             {
                 ImGui.BeginTooltip();
-                ImGui.Text($"{tooltip} Leves");
-                ImGui.Text($"Showing: {state}");
+                ImGui.Text("?? Leves".Loc(tooltip.Loc()));
+                ImGui.Text("Showing: ??".Loc(state));
                 ImGui.EndTooltip();
             }
         }
@@ -1169,8 +1169,8 @@ namespace ChilledLeves.Ui
             );
 
             // Add allowances information centered in the header
-            string allowancesText = $"Allowances: {Allowances}/100";
-            string nextText = $"Next in: {NextAllowances:hh':'mm':'ss}";
+            string allowancesText = "Allowances: ??/100".Loc(Allowances);
+            string nextText = "Next in: ??".Loc(NextAllowances.ToString("hh':'mm':'ss"));
             string sepText = " | ";
 
             // Calculate text dimensions

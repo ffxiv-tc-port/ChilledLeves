@@ -14,7 +14,10 @@ namespace ChilledLeves.Scheduler.Handlers
         private static List<int> SlotsFilled { get; set; } = new();
         private static bool? ConfirmOrAbort(AddonRequest* addon)
         {
-            if (addon->HandOverButton != null && addon->HandOverButton->IsEnabled)
+            // AtkComponentButton.IsEnabled 解的是 OwnerNode(0xA8)，不是 AtkResNode(0xA0)。
+            // 原本的 HandOverButton != null 只擋住按鈕本身，擋不到 OwnerNode 為 null，
+            // 那是 AccessViolationException(corrupted-state，try/catch 無效)。
+            if (GenericHelpers.IsComponentEnabled(addon->HandOverButton))
             {
                 new AddonMaster.Request((IntPtr)addon).HandOver();
                 return true;

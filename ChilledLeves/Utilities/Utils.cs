@@ -41,10 +41,10 @@ public static unsafe class Utils
 
     internal static unsafe float GetDistanceToPlayer(Vector3 v3) => Vector3.Distance(v3, Player.GameObject->Position);
     internal static unsafe float GetDistanceToPlayer(IGameObject gameObject) => GetDistanceToPlayer(gameObject.Position);
-    public static uint GetClassJobId() => Svc.ClientState.LocalPlayer!.ClassJob.RowId;
+    public static uint GetClassJobId() => Svc.Objects.LocalPlayer!.ClassJob.RowId;
     public static unsafe int GetLevel(int expArrayIndex = -1)
     {
-        if (expArrayIndex == -1) expArrayIndex = Svc.ClientState.LocalPlayer?.ClassJob.Value.ExpArrayIndex ?? 0;
+        if (expArrayIndex == -1) expArrayIndex = Svc.Objects.LocalPlayer?.ClassJob.Value.ExpArrayIndex ?? 0;
         return UIState.Instance()->PlayerState.ClassJobLevels[expArrayIndex];
     }
     internal static unsafe short GetCurrentLevelFromSheet(Job? job = null)
@@ -79,17 +79,49 @@ public static unsafe class Utils
         var terSheet = Svc.Data.GetExcelSheet<TerritoryType>();
         var mapId = terSheet.GetRow(teri).Map.Value.RowId;
 
-        var agent = AgentMap.Instance();
+        // 🔴 AgentMap.Instance() 由 [Agent(AgentId.Map)] 產生:內部鏈
+        //    AgentModule -> UIModule -> Framework,任一層回 null 整條就回 null(登入前、
+        //    切場景、登出後都是常態),底層 [StaticAddress]/[MemberFunction] 特徵碼失配時
+        //    改為擲 InvalidOperationException——兩種失效模式並存,缺一等於假防護。
+        //    裸解參考 null 原生指標是 AccessViolationException,在 .NET Core 屬
+        //    corrupted-state exception,try/catch 攔不到 ⇒ 只能事前判空。
+        //    這裡由 UI 按鈕觸發(低頻),所以判空後寫 Information 讓使用者回報得出來。
+        var agent = AgentMapOrNull();
+        if (agent == null)
+        {
+            ECommons.DalamudServices.Svc.Log.Information("[ChilledLeves] AgentMap 尚未就緒,本次插旗略過。");
+            return;
+        }
 
         agent->FlagMarkerCount = 0;
         agent->SetFlagMapMarker(teri, mapId, x, y);
         agent->OpenMapByMapId(mapId, territoryId: teri);
     }
 
+    /// <summary>
+    /// 取不到 AgentMap 時回 0。呼叫端(除錯視窗)必須把 0 顯示成「?」而不是畫成地圖 0,
+    /// 否則「不知道」會被誤讀成「地圖是 0」。
+    /// </summary>
     public static unsafe uint CurrentMap()
     {
-        var agent = AgentMap.Instance();
-        return agent->CurrentMapId;
+        var agent = AgentMapOrNull();
+        return agent == null ? 0u : agent->CurrentMapId;
+    }
+
+    /// <summary>
+    /// 把 <c>AgentMap.Instance()</c> 的兩種失效模式(回 null／擲 InvalidOperationException)
+    /// 統一成「回 null」,呼叫端一律判空就正確,不必知道底層屬於哪一類。
+    /// </summary>
+    private static unsafe AgentMap* AgentMapOrNull()
+    {
+        try
+        {
+            return AgentMap.Instance();
+        }
+        catch
+        {
+            return null;
+        }
     }
 
 
@@ -100,23 +132,43 @@ public static unsafe class Utils
     internal static bool? TargetgameObject(IGameObject? gameObject)
     {
         var x = gameObject;
-        if (Svc.Targets.Target != null && Svc.Targets.Target.DataId == x.DataId)
+        // 目標已消失(重查不到)時直接中止,不要沿用舊值。
+        // 原本 x.DataId 在下面的 null 檢查之前就解參考了。
+        if (x == null)
+            return true;
+
+        if (Svc.Targets.Target != null && Svc.Targets.Target.BaseId == x.BaseId)
             return true;
 
         if (!IsOccupied())
         {
             if (x != null)
             {
-                if (EzThrottler.Throttle($"Throttle Targeting {x.DataId}"))
+                if (EzThrottler.Throttle($"Throttle Targeting {x.BaseId}"))
                 {
                     Svc.Targets.SetTarget(x);
-                    ECommons.Logging.PluginLog.Information($"Setting the target to {x.DataId}");
+                    ECommons.Logging.PluginLog.Information($"Setting the target to {x.BaseId}");
                 }
             }
         }
         return false;
     }
-    internal static bool TryGetObjectByDataId(ulong dataId, out IGameObject? gameObject) => (gameObject = Svc.Objects.OrderBy(GetDistanceToPlayer).FirstOrDefault(x => x.DataId == dataId)) != null;
+    internal static bool TryGetObjectByDataId(ulong dataId, out IGameObject? gameObject) => (gameObject = Svc.Objects.OrderBy(GetDistanceToPlayer).FirstOrDefault(x => x.BaseId == dataId)) != null;
+
+    // ⚠️ 不要把 IGameObject 捕獲進 TaskManager 的閉包跨幀用。
+    // Dalamud 的 GameObject.Address 在建構時就凍結、永不重新解析
+    // (GameObject.cs:137-139),而 IGameObject.IsValid() 只檢查「玩家有沒有登入」、
+    // 完全不驗證位址(GameObject.cs:170-177)。所以存 IGameObject == 存一根原生指標,
+    // 而排隊中的後續任務是在「後面的幀」才執行的。
+    // 正解:閉包只捕獲 GameObjectId,每個任務執行時才重查物件表。
+    internal static bool TryGetObjectIdByDataId(ulong dataId, out ulong? objectId)
+    {
+        var obj = Svc.Objects.OrderBy(GetDistanceToPlayer).FirstOrDefault(x => x.BaseId == dataId);
+        objectId = obj?.GameObjectId;
+        return objectId != null;
+    }
+
+    internal static IGameObject? ResolveObject(ulong? objectId) => objectId is null ? null : Svc.Objects.SearchById(objectId.Value);
     internal static unsafe void InteractWithObject(IGameObject? gameObject)
     {
         try
@@ -157,29 +209,51 @@ public static unsafe class Utils
     /// <returns></returns>
     public static unsafe string GetNodeText(string addonName, params int[] nodeNumbers)
     {
-
+        // 原本對 NodeList 索引完全沒有邊界檢查，也沒有檢查
+        // ((AtkComponentNode*)node)->Component 是否為 null，兩者都是
+        // AccessViolationException 入口(AVE 是 corrupted-state exception，try/catch 攔不到)。
+        // GetCallback 會用 i = 1..17 走訪 SelectIconString，實際項目較少時就會越界。
+        // 任何一層取不到就回空字串 —— 對呼叫端而言等同「這次沒讀到」，不會誤判成某個名稱。
         var ptr = Svc.GameGui.GetAddonByName(addonName, 1);
+        if (ptr.Address == nint.Zero)
+            return string.Empty;
 
         var addon = (AtkUnitBase*)ptr.Address;
-        var uld = addon->UldManager;
+        if (addon->UldManager.NodeList == null || addon->UldManager.NodeListCount == 0)
+            return string.Empty;
 
+        var uld = addon->UldManager;
         AtkResNode* node = null;
-        var debugString = string.Empty;
+
         for (var i = 0; i < nodeNumbers.Length; i++)
         {
             var nodeNumber = nodeNumbers[i];
 
-            var count = uld.NodeListCount;
+            if (nodeNumber < 0 || nodeNumber >= uld.NodeListCount)
+                return string.Empty;
 
             node = uld.NodeList[nodeNumber];
-            debugString += $"[{nodeNumber}]";
+            if (node == null)
+                return string.Empty;
 
             // More nodes to traverse
             if (i < nodeNumbers.Length - 1)
             {
-                uld = ((AtkComponentNode*)node)->Component->UldManager;
+                if (node->Type != NodeType.Component)
+                    return string.Empty;
+
+                var component = ((AtkComponentNode*)node)->Component;
+                if (component == null ||
+                    component->UldManager.NodeList == null ||
+                    component->UldManager.NodeListCount == 0)
+                    return string.Empty;
+
+                uld = component->UldManager;
             }
         }
+
+        if (node == null)
+            return string.Empty;
 
         if (node->Type == NodeType.Counter)
             return ((AtkCounterNode*)node)->NodeText.ToString();
@@ -206,9 +280,20 @@ public static unsafe class Utils
 
             if ((int)node->Type >= 1000)
             {
+                // Component 是指標欄位，元件尚未建立完成時為 null；
+                // NodeList 也可能是空的。兩者不擋都會 AccessViolationException。
                 var componentNode = node->GetAsAtkComponentNode();
+                if (componentNode == null)
+                    return null;
+
                 var component = componentNode->Component;
+                if (component == null)
+                    return null;
+
                 var uldManager = component->UldManager;
+                if (uldManager.NodeList == null || uldManager.NodeListCount == 0)
+                    return null;
+
                 childNode = uldManager.NodeList[0];
                 return childNode == null ? null : GetNodeByIDChain(childNode, [.. newList]);
             }
@@ -222,7 +307,14 @@ public static unsafe class Utils
     }
     public static bool IsAddonActive(string AddonName) // Used to see if the addon is active/ready to be fired on
     {
-        var addon = RaptureAtkUnitManager.Instance()->GetAddonByName(AddonName);
+        // RaptureAtkUnitManager.Instance() 經 RaptureAtkModule 走 UIModule，UI 尚未建立時回 null
+        //（CS 手寫實作逐字是 raptureAtkModule == null ? null : &raptureAtkModule->RaptureAtkUnitManager）。
+        // 取不到就當作 addon 不存在——與下面 addon == null 完全相同的失敗形式。
+        var manager = RaptureAtkUnitManager.Instance();
+        if (manager == null)
+            return false;
+
+        var addon = manager->GetAddonByName(AddonName);
         return addon != null && addon->IsVisible && addon->IsReady;
     }
 
@@ -425,10 +517,27 @@ public static unsafe class Utils
             }
         }
 
+        // LeveDictionary/CraftDictionary only ever receive the crafter+fisher leves (see the
+        // CraftFisherJobs filter at the top of the loop above), but C.workList and
+        // C.LevePriority are *persisted config* and can outlive the dictionary that produced
+        // them: a patch that changes a row's LeveAssignmentType, a hand-edited or shared config
+        // file, or any future change to CraftFisherJobs all leave behind keys that no longer
+        // resolve. Practically every consumer of those two collections indexes
+        // LeveDictionary/CraftDictionary directly, so drop the unresolvable entries once, here,
+        // while LeveDictionary is authoritative - otherwise the first stale key surfaces as a
+        // KeyNotFoundException inside a draw loop or a scheduler task.
+        // Only the in-memory copy is pruned; the file on disk is left alone until the user saves.
+        var staleWork = C.workList.RemoveAll(e => !LeveDictionary.ContainsKey(e.LeveID) || !CraftDictionary.ContainsKey(e.LeveID));
+        if (staleWork > 0)
+            ECommons.Logging.PluginLog.Warning($"Dropped {staleWork} worklist entry/entries referencing leves that are not available on this client.");
+
+        foreach (var staleKey in C.LevePriority.Keys.Where(k => !LeveDictionary.ContainsKey(k)).ToList())
+            C.LevePriority.Remove(staleKey);
+
         foreach (var leveId in C.LevePriority)
         {
-            var leve = leveId.Key;
-            LeveDictionary[leve].Priority = leveId.Value; //
+            if (LeveDictionary.TryGetValue(leveId.Key, out var leveData))
+                leveData.Priority = leveId.Value;
         }
     }
 
@@ -838,7 +947,7 @@ public static unsafe class Utils
 
         Svc.Log.Debug($"{baseUrl}{base64}");
         ImGui.SetClipboardText($"{baseUrl}{base64}");
-        Notify.Success("Link copied to clipboard");
+        Notify.Success("Link copied to clipboard".Loc());
     }
 
     public static Dictionary<uint, int> AllItems = new();

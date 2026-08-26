@@ -61,7 +61,7 @@ internal static class SoundAlert
     }
 
     public static Sounds SoundEffect = C.Sounds;
-    public static ulong CID => Svc.ClientState.LocalContentId;
+    public static ulong CID => SvcEx.PlayerState.ContentId;
     public static readonly ulong DefaultCID = 0000000000000000;
     public static ulong CurrentId = 0000000000000000;
     public static bool refreshOverlay = false;
@@ -103,7 +103,7 @@ internal static class SoundAlert
 
                 if (C.SendChat)
                 {
-                    ECommons.ChatMethods.ChatPrinter.Orange($"[Chilled Leves] Leve's are at: {Allowances}");
+                    ECommons.ChatMethods.ChatPrinter.Orange("[Chilled Leves] Leve's are at: ??".Loc(Allowances));
                 }
                 if (C.PlaySound)
                 {

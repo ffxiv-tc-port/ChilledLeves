@@ -144,7 +144,7 @@ namespace ChilledLeves.Scheduler.Tasks
             if (!IsAccepted(leveId))
             {
                 PluginVerbos("You can't do anymore leves, stopping the process");
-                Svc.Chat.Print("No more potentional leves, stopping gathering mode");
+                Svc.Chat.Print("No more potentional leves, stopping gathering mode".Loc());
                 SchedulerMain.DisablePlugin();
             }
             else
