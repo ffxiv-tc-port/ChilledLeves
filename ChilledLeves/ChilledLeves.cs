@@ -107,6 +107,9 @@ public sealed class ChilledLeves : IDalamudPlugin
     {
         Safe(() => Svc.Framework.Update -= Tick);
         Safe(() => Svc.PluginInterface.UiBuilder.Draw -= windowSystem.Draw);
+        // 拆掉 AddonPressGuard 掛在 AddonLifecycle 上的解除封鎖監聽器，
+        // 不留任何指向本組件的委派（否則熱重載後仍會被叫到）。
+        Safe(Scheduler.Handlers.AddonPressGuard.ForceTeardown);
         Safe(EzIpcFailureLog.Disable);
         ECommonsMain.Dispose();
         Safe(TextAdvancedManager.UnlockTA);

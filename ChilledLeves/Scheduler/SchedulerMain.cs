@@ -30,6 +30,9 @@ namespace ChilledLeves.Scheduler
             WorkListMode = false;
             P.navmesh.Stop();
             P.taskManager.Abort();
+            // 佇列被清掉之後，先前登記的「這扇窗按過了」不會再有人來輪詢解除，
+            // 留著只會讓下次啟動白白被擋到逃生口逾時。監聽器留著，下次啟動照用。
+            Handlers.AddonPressGuard.Reset();
             
             foreach (var kpd in ListCycled)
             {
