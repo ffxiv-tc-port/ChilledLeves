@@ -1,4 +1,5 @@
 ﻿using ChilledLeves.Scheduler;
+using ChilledLeves.Scheduler.Handlers;
 using ChilledLeves.Scheduler.Tasks;
 using ChilledLeves.Utilities;
 using Dalamud.Game.ClientState.Conditions;
@@ -700,19 +701,26 @@ internal class DebugWindow : Window
                         ImGui.SetClipboardText(l.Name);
                     }
                     ImGui.SameLine();
+                    // l.Select() 內部已經過 AddonPressGuard。
                     if (ImGui.SmallButton("Select".Loc() + "##" + l.Name)) l.Select();
                 }
                 ref var r = ref Ref<int>.Get("Leve");
                 ImGui.InputInt("id", ref r);
                 if (ImGui.Button("Callback".Loc()))
                 {
-                    ECommons.Automation.Callback.Fire(m.Base, true, 13, 1, r);
+                    // 手動測試鈕也要過閘門：連點兩下有機會正好落在視窗關閉中的那幾幀。
+                    if (AddonPressGuard.TryBeginPress("GuildLeve", m.Base, $"13/1/{r}",
+                                                      terminating: false, routineRePress: true))
+                        ECommons.Automation.Callback.Fire(m.Base, true, 13, 1, r);
                 }
                 if (TryGetAddonMaster<AddonMaster.JournalDetail>("JournalDetail", out var det) && det.IsAddonReady)
                 {
                     if (det.CanInitiate)
                     {
-                        if (ImGui.Button("Initiate".Loc())) det.Initiate();
+                        // Initiate 走的是模擬點擊，按下即關 JournalDetail ⇒ terminating。
+                        if (ImGui.Button("Initiate".Loc())
+                            && AddonPressGuard.TryBeginPress("JournalDetail", det.Base))
+                            det.Initiate();
                     }
                 }
             }
@@ -725,7 +733,7 @@ internal class DebugWindow : Window
 
     private static List<uint> NodeIds = new List<uint>();
 
-    public void GatheringTest()
+    public unsafe void GatheringTest()
     {
         ImGui.Text("Statuses".Loc());
         ImGui.Text($"{"Gathering".Loc()} [Normal]: {Svc.Condition[ConditionFlag.Gathering]}");
@@ -764,7 +772,10 @@ internal class DebugWindow : Window
                 ImGui.Text($"{item.ItemName} ID: ({item.ItemID})");
                 ImGui.Text($"{"Gathering Chance".Loc()}: {item.GatherChance} | {"Boon".Loc()} %%: {item.BoonChance}");
                 ImGui.SameLine();
-                if (ImGui.Button("Select".Loc() + "##" + item.ItemName)) item.Gather();
+                // Gather 走的是模擬點擊（勾選框），按下即關採集視窗 ⇒ terminating。
+                if (ImGui.Button("Select".Loc() + "##" + item.ItemName)
+                    && AddonPressGuard.TryBeginPress("Gathering", m.Base))
+                    item.Gather();
             }
         }
     }

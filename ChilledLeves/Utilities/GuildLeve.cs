@@ -111,7 +111,19 @@ public unsafe class GuildLeve : AddonMasterBase<AddonGuildLeve>
             }
             else
             {
-                Callback.Fire(master.Base, true, 13, index, (int)quest?.RowId);
+                var rowId = (int)quest?.RowId;
+
+                // 🔴 這條 Callback.Fire 不經 GenericHandlers.FireCallback，要自己過同一道閘門，
+                //    否則對「正在關閉中」的理符清單再送一發就是攔不到的原生存取違規。
+                //    按下「選取」只是換選取項、視窗不會消失 ⇒ 照 (index, 理符 ID) 分開記，
+                //    否則連續接多張理符會被自己擋住；而呼叫端本來就是「選到對的那張為止」的
+                //    重試迴圈（外面只有一把 500ms 節流）⇒ 用短逃生口。
+                if (!global::ChilledLeves.Scheduler.Handlers.AddonPressGuard.TryBeginPress(
+                        "GuildLeve", master.Base, $"13/{index}/{rowId}",
+                        terminating: false, routineRePress: true))
+                    return;
+
+                Callback.Fire(master.Base, true, 13, index, rowId);
             }
         }
     }
