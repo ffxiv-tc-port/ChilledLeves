@@ -45,6 +45,10 @@ public sealed class ChilledLeves : IDalamudPlugin
         // 訂閱越早越好：事件只在 IPC **呼叫**當下才被查閱，在這裡訂閱就涵蓋往後所有呼叫。
         EzIpcFailureLog.Enable();
         ECommons.LanguageHelpers.Localization.Init("ChineseTraditional");
+        // AddonPressGuard 的幀時鐘：在這裡訂閱是為了讓它排在本外掛所有 Framework.Update
+        // 處理常式的最前面（整條多播委派共用一個 try/catch，前面的人擲例外會讓後面的人
+        // 那個 tick 整個不跑）。時鐘停住 = 守衛的逃生口永不到期 = 死鎖。
+        Scheduler.Handlers.AddonPressGuard.EnsureClockRunning();
         new ECommons.Schedulers.TickScheduler(Load);
     }
 

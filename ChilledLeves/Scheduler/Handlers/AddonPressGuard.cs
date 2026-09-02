@@ -3,6 +3,7 @@ using Dalamud.Plugin.Services;
 using ECommons.Throttlers;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace ChilledLeves.Scheduler.Handlers
 {
@@ -83,6 +84,48 @@ namespace ChilledLeves.Scheduler.Handlers
         private static readonly Dictionary<string, IAddonLifecycle.AddonEventDelegate> Watchers =
             new(StringComparer.Ordinal);
 
+        /// <summary>守衛自己的幀計數器（<see cref="OnFrameworkUpdate"/> 每個遊戲幀 +1）。</summary>
+        /// <remarks>
+        /// 🔴🔴 <b>刻意不用 <c>UiBuilder.FrameCount</c></b>：那個計數器加在 Dalamud
+        /// <c>UiBuilder.OnDraw()</c> 的<b>最後</b>，而該函式在三種情況下會提早 return ——
+        /// ①使用者按下隱藏 UI 熱鍵 ②<b>過場動畫</b> ③GPose（三個對應的設定預設全開）。
+        /// 也就是說<b>過場期間那個計數器完全不前進</b>。
+        /// 按下點走的是 <c>Framework.Update</c>／原生事件，過場中照常每幀被叫到，
+        /// 於是「按下照常、逃生口永不到期」⇒ <c>Talk</c> 這種要靠逃生口翻頁的窗會卡在第一頁，
+        /// 而封鎖也永遠不會因逾時解除。
+        /// <para>
+        /// <c>Framework.Update</c> 在遊戲的 update hook 裡，與繪製與否無關，所以自己數才是對的時鐘。
+        /// </para>
+        /// </remarks>
+        private static long frameCount;
+
+        /// <summary>0 ＝時鐘還沒訂閱、1 ＝已訂閱。</summary>
+        /// <remarks>
+        /// 🔴 用 <see cref="Interlocked.CompareExchange(ref int, int, int)"/> 而不是 <c>bool</c>：
+        /// 重複訂閱不是「沒效果」，而是<b>一個 tick 前進 2 幀 ＝ 所有逃生口對半砍</b>，
+        /// 會把補按往「關閉中」的危險窗口推。
+        /// </remarks>
+        private static int clockSubscribed;
+
+        /// <summary>目前的幀序號。</summary>
+        private static long CurrentFrame => frameCount;
+
+        /// <summary>時鐘本體。<b>函式體內不可以有任何條件</b>，否則會出現「時鐘停住」的空窗。</summary>
+        private static void OnFrameworkUpdate(IFramework framework) => frameCount++;
+
+        /// <summary>啟動守衛用的幀時鐘（可重複呼叫，只會真的訂閱一次）。</summary>
+        /// <remarks>
+        /// 🔑 <b>越早訂閱越好</b>：同一個外掛內部的 <c>Framework.Update</c> 是一條多播委派、
+        /// 整條包在單一 try/catch 裡（沒有 per-handler 例外隔離），
+        /// 排在前面的處理常式擲例外時，<b>後面所有處理常式那個 tick 完全不會被呼叫</b>。
+        /// 時鐘排在最前面，才不會被別人的例外連帶停掉。
+        /// </remarks>
+        internal static void EnsureClockRunning()
+        {
+            if (Interlocked.CompareExchange(ref clockSubscribed, 1, 0) != 0) return;
+            Svc.Framework.Update += OnFrameworkUpdate;
+        }
+
         /// <summary>
         /// 登記「即將對這扇視窗送出 callback」。<b>回 <see langword="false"/> ＝這一幀絕對不能送。</b>
         /// </summary>
@@ -92,6 +135,11 @@ namespace ChilledLeves.Scheduler.Handlers
         /// </remarks>
         public static bool TryBeginPress(string addonName, AtkUnitBase* addon)
         {
+            // 保險絲：外掛建構式已經叫過一次，這裡再叫一次是為了「萬一那條路徑改掉了」——
+            // 時鐘沒跑的話 waited 恆為 0、逃生口永不到期，等於把崩潰換成死鎖。
+            // 🔴 必須放在所有 early return 之前。
+            EnsureClockRunning();
+
             if (addon == null || string.IsNullOrEmpty(addonName)) return false;
 
             // 先把「那扇窗已經從 addon 清單消失」的紀錄清掉（含其他名字的），
@@ -100,7 +148,7 @@ namespace ChilledLeves.Scheduler.Handlers
             EnsureWatching(addonName);
 
             var address = (nint)addon;
-            var frame = (long)Svc.PluginInterface.UiBuilder.FrameCount;
+            var frame = CurrentFrame;
 
             if (PressedByAddon.TryGetValue(addonName, out var pressed) && pressed.Address == address)
             {
@@ -130,6 +178,9 @@ namespace ChilledLeves.Scheduler.Handlers
         /// <summary>外掛卸載時硬拆所有監聽器（不留指向本組件的委派）。</summary>
         public static void ForceTeardown()
         {
+            if (Interlocked.Exchange(ref clockSubscribed, 0) == 1)
+                Svc.Framework.Update -= OnFrameworkUpdate;
+
             foreach (var (addonName, handler) in Watchers)
             {
                 Svc.AddonLifecycle.UnregisterListener(AddonEvent.PostSetup, addonName, handler);
@@ -185,7 +236,18 @@ namespace ChilledLeves.Scheduler.Handlers
         {
             if (Watchers.ContainsKey(addonName)) return;
 
-            IAddonLifecycle.AddonEventDelegate handler = (_, _) => PressedByAddon.Remove(addonName);
+            // 🔴 只清「就是這一扇」的紀錄，不能按名稱整包清。
+            // 失效路徑：幀 F 對 #A 按下並登記；幀 F+1 #A 進入關閉幀（三關仍全過），
+            // 此時同名的第二扇 #B 被建立 → PostSetup 觸發 → 若按名稱清就把 #A 的紀錄一起清掉；
+            // 幀 F+2 按下點解到 index 1 仍是 #A、查無紀錄 → 放行 → 對關閉中的 #A 送第二發 ⇒ 原生 AVE。
+            IAddonLifecycle.AddonEventDelegate handler = (_, args) =>
+            {
+                var address = (nint)args.Addon.Address;
+                if (address == 0) return;
+                if (PressedByAddon.TryGetValue(addonName, out var pressed) && pressed.Address == address)
+                    PressedByAddon.Remove(addonName);
+            };
+
 
             Watchers[addonName] = handler;
             Svc.AddonLifecycle.RegisterListener(AddonEvent.PostSetup, addonName, handler);
