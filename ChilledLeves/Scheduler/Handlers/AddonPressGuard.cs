@@ -293,7 +293,7 @@ namespace ChilledLeves.Scheduler.Handlers
                     //    而且 ECommons 的 log 沒有寫入端閘門，「等級關著就免費」是錯的。
                     if (!record.RoutineRePress && EzThrottler.Throttle($"AddonPressGuard-Hold-{addonName}", 1000))
                     {
-                        // 🔴 這就是崩潰的那一幀。診斷寫 Information（使用者跑 LogLevel 2），並節流免得洗版。
+                        // 🔴 這就是崩潰的那一幀。診斷寫 Information（使用者跑 LogLevel 1），並節流免得洗版。
                         PluginInfo($"[AddonPressGuard] 「{addonName}」（實例 0x{address:X}）按過之後還沒觀察到它收掉，" +
                                    "這一幀不再送 —— 對關閉中的視窗送出按下是攔不到的存取違規。");
                     }
