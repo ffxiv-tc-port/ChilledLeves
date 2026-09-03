@@ -304,6 +304,8 @@ namespace ChilledLeves.Scheduler.Handlers
 
             TrimIfNeeded(presses);
             presses[pressKey] = new PressRecord(address, frame, terminating, routineRePress);
+            // 跨外掛重按診斷：只在真的送出按壓時記一行，刻意不節流。
+            PluginInfo($"[按窗診斷] plugin=ChilledLeves addon={addonName} addr=0x{address:X} key={pressKey}");
             return true;
         }
 
