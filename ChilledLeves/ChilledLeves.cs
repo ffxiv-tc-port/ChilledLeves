@@ -144,6 +144,14 @@ public sealed class ChilledLeves : IDalamudPlugin
         }
         else if (firstArg.ToLower() == "add")
         {
+            // 上面只擋了 Length == 0,而 "add" 需要再吃兩個參數。
+            // 少打參數(例如只輸入 /chilledleves add)會直接越界擲 IndexOutOfRangeException。
+            if (subcommands.Length < 3)
+            {
+                PluginVerbos("用法:/chilledleves add <理符ID> <次數1-100>");
+                return;
+            }
+
             string secondCommand = subcommands[1];
             string thirdCommand = subcommands[2];
             uint leveId = 0;
