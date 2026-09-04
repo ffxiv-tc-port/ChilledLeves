@@ -1,21 +1,21 @@
-# Chilled Leves (Leves are better cold)
-Another leve turnin plugin that might never get finished
+# Chilled Leves
 
-**Please Note** this is currently actively under development. There might be things that break, but I'm trying my darndest to get it up and running how it should be.   
-Repo: `https://puni.sh/api/repository/ice`
+理符任務自動交納插件。指令 `/chilledleves`（別名 `/leveitalone`）。
 
-### Currently supports
-✔️ Turnins for Crafters  
-✔️ Support for a list to be able to grab and turnin from each NPC  
-✔️ Turnins for Fisher (From ARR -> DT)   
-✔️ Gathering Farm mode (Currently supports fisher) where you can run until you complete all the leves at the vendor or until you hit x level 
-✔️ Multi-Grab Leves | Multi-Turnin Leves from the same NPC if you have them done
+## 功能
 
-### Current Plans
-- [ ] Improve the Turnin NPC to see if there are multiple leves to be turned in
-- [ ] Fix mount roulette (for characters that only have 1 mount)
-- [ ] More to come as I think about it
+- 八個生產職的理符任務自動交納（依待辦清單逐一領取、交納）
+- 漁師理符任務自動交納（新生～暁月版本內容）
+- 採集職優先目標刷分模式：自動循環指定路線，直到理符任務全部完成或達到指定等級
+- 可輸入公會工坊需要保留的材料數量，自動調整循環次數以留下足夠庫存
+- 支援同一 NPC 多筆理符同時領取／交納
 
-Future plans:
-- [ ] Make it to where if you're at the leve vendor, able to grab multiple classes of leves if possible [Not just CUL for instance, but CUL, BSM, and ARM if they're all in the same city]
-- [ ] Provide an indicator for all potentional leves that you can do in the main Ui (might have to look into allagan tools for this implimentation)
+## 依賴
+
+需搭配 Artisan、Lifestream、vnavmesh、Pandora、YesAlready 使用。
+
+## 安裝
+
+在 Dalamud 設定的「自訂插件庫」加入
+`https://raw.githubusercontent.com/ffxiv-tc-port/DalamudPluginsTC/main/repo.json`
+並啟用，再從插件列表安裝。
