@@ -104,6 +104,7 @@ public sealed class ChilledLeves : IDalamudPlugin
         GenericManager.Tick();
         TextAdvancedManager.Tick();
         YesAlreadyManager.Tick();
+        AlignCameraManager.Tick();
         SoundAlert.Tick();
     }
 
@@ -115,6 +116,9 @@ public sealed class ChilledLeves : IDalamudPlugin
         // 不留任何指向本組件的委派（否則熱重載後仍會被叫到）。
         Safe(Scheduler.Handlers.AddonPressGuard.ForceTeardown);
         Safe(EzIpcFailureLog.Disable);
+        // 🔴 一定要在 ECommonsMain.Dispose() **之前**:還原要靠 EzIPC 的委派打回 vnavmesh,
+        //    ECommons 收掉之後那些委派就不保證還能用了(而且失敗是靜默的)。
+        Safe(AlignCameraManager.RestoreNow);
         ECommonsMain.Dispose();
         Safe(TextAdvancedManager.UnlockTA);
         Safe(YesAlreadyManager.Unlock);

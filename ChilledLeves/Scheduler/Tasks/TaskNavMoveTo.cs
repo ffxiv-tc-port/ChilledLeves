@@ -20,7 +20,9 @@ namespace ChilledLeves.Scheduler.Tasks
             if (P.navmesh.PathfindInProgress() || P.navmesh.IsRunning() || PlayerHandlers.IsMoving()) return false;
 
             P.navmesh.PathfindAndMoveTo(targetPosition, fly);
-            P.navmesh.SetAlignCamera(false);
+            // 🔴 不要直接寫 vnavmesh 的全域開關:那是無主的,寫下去沒有人負責還。
+            //    走 AlignCameraManager 才會在排程停止/外掛卸載時還原成使用者原本的設定。
+            AlignCameraManager.SuppressNow();
             return false;
         }
         private static TaskManagerConfiguration DConfig => new(timeLimitMS: 10 * 60 * 1000, abortOnTimeout: false);

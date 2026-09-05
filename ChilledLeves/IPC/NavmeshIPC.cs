@@ -36,13 +36,19 @@ public class NavmeshIPC
     [EzIPC("Nav.%m")] public readonly Func<float> BuildProgress;
     [EzIPC("Nav.%m")] public readonly Func<bool> Reload;
     [EzIPC("Nav.%m")] public readonly Func<bool> Rebuild;
-    [EzIPC("Nav.%m")] public readonly Func<Vector3, Vector3, bool, Vector3> Pathfind;
+    // 🔴 簽章必須與提供端一致:vnavmesh 的 Nav.Pathfind 是
+    //    NavmeshManager.QueryPathBasic ⇒ Task<List<Vector3>>,不是 Vector3。
+    //    型別對不上時 Dalamud 擲 IpcTypeMismatchError,而 SafeWrapper.IPCException 只攔
+    //    IpcNotReadyError ⇒ 一旦有人加上呼叫點就會每次呼叫都擲例外。目前零呼叫點,現在改零風險。
+    [EzIPC("Nav.%m")] public readonly Func<Vector3, Vector3, bool, Task<List<Vector3>>> Pathfind;
 
     [EzIPC("SimpleMove.%m")] public readonly Func<Vector3, bool, bool> PathfindAndMoveTo;
     [EzIPC("SimpleMove.%m")] public readonly Func<bool> PathfindInProgress;
 
     [EzIPC("Path.%m")] public readonly Action<List<Vector3>, bool> MoveTo;
     [EzIPC("Path.%m")] public readonly Action Stop;
+    // 🔑 GetAlignCamera 是 AlignCameraManager 拍快照用的——沒有 getter 就只能單向寫、永不還原。
+    [EzIPC("Path.%m")] public readonly Func<bool> GetAlignCamera;
     [EzIPC("Path.%m")] public readonly Action<bool> SetAlignCamera;
     [EzIPC("Path.%m")] public readonly Func<bool> IsRunning;
 
