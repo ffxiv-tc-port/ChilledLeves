@@ -12,7 +12,9 @@ namespace ChilledLeves.IPC;
 public class NavmeshIPC
 {
     public const string Name = "vnavmesh";
-    public const string Repo = "https://puni.sh/api/repository/veyn";
+    // 這裡絕對不能指國際服的外掛庫：那裡的 vnavmesh 內部名與台服版完全相同，
+    // 加進去會把 API15 的版本裝進台服環境並撞同一個已安裝鍵。一律指本艦隊的 feed。
+    public const string Repo = "https://raw.githubusercontent.com/ffxiv-tc-port/DalamudPluginsTC/main/repo.json";
     public NavmeshIPC() => EzIPC.Init(this, Name, SafeWrapper.AnyException);
     public static bool Installed => HasPlugin(Name);
     public bool Ready

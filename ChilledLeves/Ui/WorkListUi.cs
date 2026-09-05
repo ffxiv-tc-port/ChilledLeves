@@ -574,7 +574,7 @@ namespace ChilledLeves.Ui
                         // Check if button is clicked
                         if (ImGui.Button(buttonText.Loc(), new Vector2(gatherBtnWidth / 2, navButtonHeight)))
                         {
-                            ImGui.SetClipboardText("https://puni.sh/api/repository/veyn");
+                            ImGui.SetClipboardText(IPC.NavmeshIPC.Repo);
                             buttonText = "Copied to Clipboard";
                             lastClickTime = (float)ImGui.GetTime(); // Store the current ImGui time
                         }
@@ -659,7 +659,7 @@ namespace ChilledLeves.Ui
                         // Check if button is clicked
                         if (ImGui.Button(buttonText.Loc(), new Vector2(gatherBtnWidth / 2, navButtonHeight)))
                         {
-                            ImGui.SetClipboardText("https://puni.sh/api/repository/veyn");
+                            ImGui.SetClipboardText(IPC.NavmeshIPC.Repo);
                             buttonText = "Copied to Clipboard";
                             lastClickTime = (float)ImGui.GetTime(); // Store the current ImGui time
                         }

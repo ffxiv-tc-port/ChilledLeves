@@ -6,6 +6,8 @@ namespace ChilledLeves.IPC;
 public class PandoraIPC
 {
     public const string Name = "PandorasBox";
+    // 這條仍是國際服的庫，因為台服艦隊沒有 PandorasBox 的移植版可指。
+    // 目前零呼叫；要接安裝按鈕之前必須先確認目標庫是台服版，否則會裝進 API15 的外掛。
     public const string Repo = "https://love.puni.sh/ment.json";
 
     public PandoraIPC() => EzIPC.Init(this, Name, SafeWrapper.AnyException);
