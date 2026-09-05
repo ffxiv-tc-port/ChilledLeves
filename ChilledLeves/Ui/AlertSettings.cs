@@ -91,7 +91,7 @@ namespace ChilledLeves.Ui
             if (ImGui.Button("Add character to ??".Loc(list.Loc()) + "###AddCharacterToList"))
             {
                 var character = Svc.Objects.LocalPlayer.Name.ToString();
-                var id = SvcEx.PlayerState.ContentId;
+                var id = Svc.PlayerState.ContentId;
 
                 if (whitelist && !C.whitelistCharacters.ContainsKey(id))
                     C.whitelistCharacters.Add(id, character);
