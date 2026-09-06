@@ -42,18 +42,76 @@ public static unsafe class Utils
     internal static unsafe float GetDistanceToPlayer(Vector3 v3) => Vector3.Distance(v3, Player.GameObject->Position);
     internal static unsafe float GetDistanceToPlayer(IGameObject gameObject) => GetDistanceToPlayer(gameObject.Position);
     public static uint GetClassJobId() => Svc.Objects.LocalPlayer!.ClassJob.RowId;
-    public static unsafe int GetLevel(int expArrayIndex = -1)
+    // === ExpArrayIndex 邊界防護 ===
+    // ClassJob 第 0 列(冒險者/ADV)的 ExpArrayIndex 是 -1 —— 那是台服 7.20 ClassJob 表
+    // 46 列裡唯一的負值(其餘 0..31,2026-09-07 離線查表確認)。
+    // PlayerState 的 ClassJobLevels 與 ClassJobExperience 都是 FixedSizeArray35,
+    // 拿 -1 去索引會擲 IndexOutOfRangeException。
+    // 🔴 舊寫法的 `?? 0` 擋不到這個:它只在「查無此列」時生效,
+    //    列存在而 ExpArrayIndex 是 -1 會原樣穿過去。
+    // 🔴 而且退回索引 0 也不是安全的預設 —— 第 0 格是格鬥士/武僧(PGL/MNK)的資料,
+    //    拿它當未知職業的等級/經驗值是安靜的錯答案。因此一律回 0 表示「未知」。
+
+    private static readonly HashSet<uint> LoggedBadExpArrayIndex = new();
+
+    /// <summary>
+    /// 檢查 <paramref name="expArrayIndex"/> 是否落在長度 <paramref name="arrayLength"/> 的
+    /// 經驗值陣列範圍內。上下界都擋,長度取自陣列本身而不是寫死 35。
+    /// </summary>
+    /// <remarks>
+    /// 同一個 ClassJob id 只寫一行 <c>Information</c>,之後靜默。
+    /// 🔴 <c>PluginInfo</c> 的呼叫刻意放在鎖外(鎖內不做 I/O);
+    /// 用 <c>Information</c> 而不是 <c>DuoLog</c>:後者每個等級都會無條件洗使用者的聊天視窗。
+    /// </remarks>
+    private static bool IsExpArrayIndexInRange(int expArrayIndex, int arrayLength, uint classJobId)
     {
-        if (expArrayIndex == -1) expArrayIndex = Svc.Objects.LocalPlayer?.ClassJob.Value.ExpArrayIndex ?? 0;
-        return UIState.Instance()->PlayerState.ClassJobLevels[expArrayIndex];
-    }
-    internal static unsafe short GetCurrentLevelFromSheet(Job? job = null)
-    {
-        PlayerState* playerState = PlayerState.Instance();
-        return playerState->ClassJobLevels[Svc.Data.GetExcelSheet<ClassJob>().GetRowOrDefault((uint)(job ?? (Player.Available ? Player.Object.GetJob() : 0)))?.ExpArrayIndex ?? 0];
+        if (expArrayIndex >= 0 && expArrayIndex < arrayLength)
+            return true;
+
+        bool firstTime;
+        lock (LoggedBadExpArrayIndex)
+            firstTime = LoggedBadExpArrayIndex.Add(classJobId);
+
+        if (firstTime)
+            PluginInfo($"[ExpArrayIndex] ClassJob {classJobId} 的 ExpArrayIndex 是 {expArrayIndex}," +
+                       $"不在 0..{arrayLength - 1} 內(冒險者/ADV 是 -1);以 0 表示未知。");
+
+        return false;
     }
 
-    public static unsafe float GetJobExp(uint classjob) => PlayerState.Instance()->ClassJobExperience[GetRow<ClassJob>(classjob)?.ExpArrayIndex ?? 0];
+    public static unsafe int GetLevel(int expArrayIndex = -1)
+    {
+        // -1 同時是「用目前職業」的哨兵值,不是錯誤 —— 必須先解析完再檢查邊界。
+        uint classJobId = 0;
+        if (expArrayIndex == -1)
+        {
+            var classJob = Svc.Objects.LocalPlayer?.ClassJob;
+            classJobId = classJob?.RowId ?? 0;
+            expArrayIndex = classJob?.Value.ExpArrayIndex ?? -1;
+        }
+
+        PlayerState* playerState = &UIState.Instance()->PlayerState;
+        var levels = playerState->ClassJobLevels;
+        return IsExpArrayIndexInRange(expArrayIndex, levels.Length, classJobId) ? levels[expArrayIndex] : 0;
+    }
+
+    internal static unsafe short GetCurrentLevelFromSheet(Job? job = null)
+    {
+        uint classJobId = (uint)(job ?? (Player.Available ? Player.Object.GetJob() : 0));
+        int expArrayIndex = Svc.Data.GetExcelSheet<ClassJob>().GetRowOrDefault(classJobId)?.ExpArrayIndex ?? -1;
+
+        PlayerState* playerState = PlayerState.Instance();
+        var levels = playerState->ClassJobLevels;
+        return IsExpArrayIndexInRange(expArrayIndex, levels.Length, classJobId) ? levels[expArrayIndex] : (short)0;
+    }
+
+    public static unsafe float GetJobExp(uint classjob)
+    {
+        int expArrayIndex = GetRow<ClassJob>(classjob)?.ExpArrayIndex ?? -1;
+
+        var experience = PlayerState.Instance()->ClassJobExperience;
+        return IsExpArrayIndexInRange(expArrayIndex, experience.Length, classjob) ? experience[expArrayIndex] : 0f;
+    }
     public static bool IsInZone(uint zoneID) => Svc.ClientState.TerritoryType == zoneID;
     public static uint CurrentTerritory() => GameMain.Instance()->CurrentTerritoryTypeId;
     public static bool IsBetweenAreas => Svc.Condition[ConditionFlag.BetweenAreas] || Svc.Condition[ConditionFlag.BetweenAreas51];
