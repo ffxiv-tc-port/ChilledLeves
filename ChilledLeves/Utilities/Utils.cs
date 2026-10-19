@@ -20,6 +20,7 @@ using FFXIVClientStructs.Interop;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 
 namespace ChilledLeves.Utilities;
@@ -33,7 +34,11 @@ public static unsafe class Utils
     public static void PluginInfo(string message) => ECommons.Logging.PluginLog.Information(message);
     public static void PluginDebug(string message) => ECommons.Logging.PluginLog.Debug(message);
     internal static bool GenericThrottle => FrameThrottler.Throttle("AutoRetainerGenericThrottle", 10);
-    public static TaskManagerConfiguration DConfig => new(timeLimitMS: 10 * 60 * 3000, abortOnTimeout: false);
+    /// <summary>NPC 互動後各步驟（接理符、離開委託人、交納）的設定：正常數秒～半分鐘，2 分鐘沒完成就停掉整個理符自動化。</summary>
+    public static TaskManagerConfiguration DConfig => new(timeLimitMS: Scheduler.Handlers.StepTimeoutStop.LimitMS, abortOnTimeout: true)
+    {
+        OnTaskTimeout = Scheduler.Handlers.StepTimeoutStop.OnTimeout,
+    };
 
     #endregion
 
@@ -41,19 +46,73 @@ public static unsafe class Utils
 
     internal static unsafe float GetDistanceToPlayer(Vector3 v3) => Vector3.Distance(v3, Player.GameObject->Position);
     internal static unsafe float GetDistanceToPlayer(IGameObject gameObject) => GetDistanceToPlayer(gameObject.Position);
-    public static uint GetClassJobId() => Svc.ClientState.LocalPlayer!.ClassJob.RowId;
-    public static unsafe int GetLevel(int expArrayIndex = -1)
+    public static uint GetClassJobId() => Svc.Objects.LocalPlayer!.ClassJob.RowId;
+    // === ExpArrayIndex 邊界防護 ===
+    // ClassJob 第 0 列(冒險者/ADV)的 ExpArrayIndex 是 -1,拿去索引 PlayerState 的
+    // ClassJobLevels／ClassJobExperience 會擲 IndexOutOfRangeException。
+    // 🔴 `?? 0` 擋不到:它只在「查無此列」時生效,列存在而 ExpArrayIndex 是 -1 會原樣穿過去。
+    // 🔴 退回索引 0 也不是安全的預設 —— 第 0 格是格鬥士/武僧(PGL/MNK)的資料,因此一律回 0 表示「未知」。
+
+    private static readonly HashSet<uint> LoggedBadExpArrayIndex = new();
+
+    /// <summary>
+    /// 檢查 <paramref name="expArrayIndex"/> 是否落在長度 <paramref name="arrayLength"/> 的
+    /// 經驗值陣列範圍內。上下界都擋,長度取自陣列本身而不是寫死 35。
+    /// </summary>
+    /// <remarks>
+    /// 同一個 ClassJob id 只寫一行 <c>Information</c>,之後靜默。
+    /// 🔴 <c>PluginInfo</c> 的呼叫刻意放在鎖外(鎖內不做 I/O);
+    /// 用 <c>Information</c> 而不是 <c>DuoLog</c>:後者每個等級都會無條件洗使用者的聊天視窗。
+    /// </remarks>
+    private static bool IsExpArrayIndexInRange(int expArrayIndex, int arrayLength, uint classJobId)
     {
-        if (expArrayIndex == -1) expArrayIndex = Svc.ClientState.LocalPlayer?.ClassJob.Value.ExpArrayIndex ?? 0;
-        return UIState.Instance()->PlayerState.ClassJobLevels[expArrayIndex];
-    }
-    internal static unsafe short GetCurrentLevelFromSheet(Job? job = null)
-    {
-        PlayerState* playerState = PlayerState.Instance();
-        return playerState->ClassJobLevels[Svc.Data.GetExcelSheet<ClassJob>().GetRowOrDefault((uint)(job ?? (Player.Available ? Player.Object.GetJob() : 0)))?.ExpArrayIndex ?? 0];
+        if (expArrayIndex >= 0 && expArrayIndex < arrayLength)
+            return true;
+
+        bool firstTime;
+        lock (LoggedBadExpArrayIndex)
+            firstTime = LoggedBadExpArrayIndex.Add(classJobId);
+
+        if (firstTime)
+            PluginInfo($"[ExpArrayIndex] ClassJob {classJobId} 的 ExpArrayIndex 是 {expArrayIndex}," +
+                       $"不在 0..{arrayLength - 1} 內(冒險者/ADV 是 -1);以 0 表示未知。");
+
+        return false;
     }
 
-    public static unsafe float GetJobExp(uint classjob) => PlayerState.Instance()->ClassJobExperience[GetRow<ClassJob>(classjob)?.ExpArrayIndex ?? 0];
+    public static unsafe int GetLevel(int expArrayIndex = -1)
+    {
+        // -1 同時是「用目前職業」的哨兵值,不是錯誤 —— 必須先解析完再檢查邊界。
+        uint classJobId = 0;
+        if (expArrayIndex == -1)
+        {
+            var classJob = Svc.Objects.LocalPlayer?.ClassJob;
+            classJobId = classJob?.RowId ?? 0;
+            expArrayIndex = classJob?.Value.ExpArrayIndex ?? -1;
+        }
+
+        PlayerState* playerState = &UIState.Instance()->PlayerState;
+        var levels = playerState->ClassJobLevels;
+        return IsExpArrayIndexInRange(expArrayIndex, levels.Length, classJobId) ? levels[expArrayIndex] : 0;
+    }
+
+    internal static unsafe short GetCurrentLevelFromSheet(Job? job = null)
+    {
+        uint classJobId = (uint)(job ?? (Player.Available ? Player.Object.GetJob() : 0));
+        int expArrayIndex = Svc.Data.GetExcelSheet<ClassJob>().GetRowOrDefault(classJobId)?.ExpArrayIndex ?? -1;
+
+        PlayerState* playerState = PlayerState.Instance();
+        var levels = playerState->ClassJobLevels;
+        return IsExpArrayIndexInRange(expArrayIndex, levels.Length, classJobId) ? levels[expArrayIndex] : (short)0;
+    }
+
+    public static unsafe float GetJobExp(uint classjob)
+    {
+        int expArrayIndex = GetRow<ClassJob>(classjob)?.ExpArrayIndex ?? -1;
+
+        var experience = PlayerState.Instance()->ClassJobExperience;
+        return IsExpArrayIndexInRange(expArrayIndex, experience.Length, classjob) ? experience[expArrayIndex] : 0f;
+    }
     public static bool IsInZone(uint zoneID) => Svc.ClientState.TerritoryType == zoneID;
     public static uint CurrentTerritory() => GameMain.Instance()->CurrentTerritoryTypeId;
     public static bool IsBetweenAreas => Svc.Condition[ConditionFlag.BetweenAreas] || Svc.Condition[ConditionFlag.BetweenAreas51];
@@ -79,17 +138,45 @@ public static unsafe class Utils
         var terSheet = Svc.Data.GetExcelSheet<TerritoryType>();
         var mapId = terSheet.GetRow(teri).Map.Value.RowId;
 
-        var agent = AgentMap.Instance();
+        // 🔴 AgentMap.Instance() 兩種失效模式(回 null／擲 InvalidOperationException)都由 AgentMapOrNull 收成 null;
+        //    裸解參考 null 原生指標是攔不到的 AccessViolationException ⇒ 只能事前判空。
+        //    這裡由 UI 按鈕觸發(低頻),所以判空後寫 Information 讓使用者回報得出來。
+        var agent = AgentMapOrNull();
+        if (agent == null)
+        {
+            ECommons.DalamudServices.Svc.Log.Information("[ChilledLeves] AgentMap 尚未就緒,本次插旗略過。");
+            return;
+        }
 
         agent->FlagMarkerCount = 0;
         agent->SetFlagMapMarker(teri, mapId, x, y);
         agent->OpenMapByMapId(mapId, territoryId: teri);
     }
 
+    /// <summary>
+    /// 取不到 AgentMap 時回 0。呼叫端(除錯視窗)必須把 0 顯示成「?」而不是畫成地圖 0,
+    /// 否則「不知道」會被誤讀成「地圖是 0」。
+    /// </summary>
     public static unsafe uint CurrentMap()
     {
-        var agent = AgentMap.Instance();
-        return agent->CurrentMapId;
+        var agent = AgentMapOrNull();
+        return agent == null ? 0u : agent->CurrentMapId;
+    }
+
+    /// <summary>
+    /// 把 <c>AgentMap.Instance()</c> 的兩種失效模式(回 null／擲 InvalidOperationException)
+    /// 統一成「回 null」,呼叫端一律判空就正確,不必知道底層屬於哪一類。
+    /// </summary>
+    private static unsafe AgentMap* AgentMapOrNull()
+    {
+        try
+        {
+            return AgentMap.Instance();
+        }
+        catch
+        {
+            return null;
+        }
     }
 
 
@@ -100,23 +187,41 @@ public static unsafe class Utils
     internal static bool? TargetgameObject(IGameObject? gameObject)
     {
         var x = gameObject;
-        if (Svc.Targets.Target != null && Svc.Targets.Target.DataId == x.DataId)
+        // 目標已消失(重查不到)時直接中止,不要沿用舊值。
+        if (x == null)
+            return true;
+
+        if (Svc.Targets.Target != null && Svc.Targets.Target.BaseId == x.BaseId)
             return true;
 
         if (!IsOccupied())
         {
             if (x != null)
             {
-                if (EzThrottler.Throttle($"Throttle Targeting {x.DataId}"))
+                if (EzThrottler.Throttle($"Throttle Targeting {x.BaseId}"))
                 {
                     Svc.Targets.SetTarget(x);
-                    ECommons.Logging.PluginLog.Information($"Setting the target to {x.DataId}");
+                    ECommons.Logging.PluginLog.Information($"Setting the target to {x.BaseId}");
                 }
             }
         }
         return false;
     }
-    internal static bool TryGetObjectByDataId(ulong dataId, out IGameObject? gameObject) => (gameObject = Svc.Objects.OrderBy(GetDistanceToPlayer).FirstOrDefault(x => x.DataId == dataId)) != null;
+    internal static bool TryGetObjectByDataId(ulong dataId, out IGameObject? gameObject) => (gameObject = Svc.Objects.OrderBy(GetDistanceToPlayer).FirstOrDefault(x => x.BaseId == dataId)) != null;
+
+    // ⚠️ 不要把 IGameObject 捕獲進 TaskManager 的閉包跨幀用。
+    // 物件表交回的 IGameObject 是共用包裝,跨幀持有會靜默換人或懸空,
+    // 而 IGameObject.IsValid() 只檢查「玩家有沒有登入」、完全不驗證位址。
+    // 排隊中的後續任務是在「後面的幀」才執行的。
+    // 正解:閉包只捕獲 GameObjectId,每個任務執行時才重查物件表。
+    internal static bool TryGetObjectIdByDataId(ulong dataId, out ulong? objectId)
+    {
+        var obj = Svc.Objects.OrderBy(GetDistanceToPlayer).FirstOrDefault(x => x.BaseId == dataId);
+        objectId = obj?.GameObjectId;
+        return objectId != null;
+    }
+
+    internal static IGameObject? ResolveObject(ulong? objectId) => objectId is null ? null : Svc.Objects.SearchById(objectId.Value);
     internal static unsafe void InteractWithObject(IGameObject? gameObject)
     {
         try
@@ -157,29 +262,50 @@ public static unsafe class Utils
     /// <returns></returns>
     public static unsafe string GetNodeText(string addonName, params int[] nodeNumbers)
     {
-
+        // NodeList 索引越界、((AtkComponentNode*)node)->Component 為 null 都是
+        // AccessViolationException 入口(try/catch 攔不到)。
+        // GetCallback 會用 i = 1..17 走訪 SelectIconString，實際項目較少時就會越界。
+        // 任何一層取不到就回空字串 —— 對呼叫端而言等同「這次沒讀到」，不會誤判成某個名稱。
         var ptr = Svc.GameGui.GetAddonByName(addonName, 1);
+        if (ptr.Address == nint.Zero)
+            return string.Empty;
 
         var addon = (AtkUnitBase*)ptr.Address;
-        var uld = addon->UldManager;
+        if (addon->UldManager.NodeList == null || addon->UldManager.NodeListCount == 0)
+            return string.Empty;
 
+        var uld = addon->UldManager;
         AtkResNode* node = null;
-        var debugString = string.Empty;
+
         for (var i = 0; i < nodeNumbers.Length; i++)
         {
             var nodeNumber = nodeNumbers[i];
 
-            var count = uld.NodeListCount;
+            if (nodeNumber < 0 || nodeNumber >= uld.NodeListCount)
+                return string.Empty;
 
             node = uld.NodeList[nodeNumber];
-            debugString += $"[{nodeNumber}]";
+            if (node == null)
+                return string.Empty;
 
             // More nodes to traverse
             if (i < nodeNumbers.Length - 1)
             {
-                uld = ((AtkComponentNode*)node)->Component->UldManager;
+                if (node->Type != NodeType.Component)
+                    return string.Empty;
+
+                var component = ((AtkComponentNode*)node)->Component;
+                if (component == null ||
+                    component->UldManager.NodeList == null ||
+                    component->UldManager.NodeListCount == 0)
+                    return string.Empty;
+
+                uld = component->UldManager;
             }
         }
+
+        if (node == null)
+            return string.Empty;
 
         if (node->Type == NodeType.Counter)
             return ((AtkCounterNode*)node)->NodeText.ToString();
@@ -206,9 +332,20 @@ public static unsafe class Utils
 
             if ((int)node->Type >= 1000)
             {
+                // Component 是指標欄位，元件尚未建立完成時為 null；
+                // NodeList 也可能是空的。兩者不擋都會 AccessViolationException。
                 var componentNode = node->GetAsAtkComponentNode();
+                if (componentNode == null)
+                    return null;
+
                 var component = componentNode->Component;
+                if (component == null)
+                    return null;
+
                 var uldManager = component->UldManager;
+                if (uldManager.NodeList == null || uldManager.NodeListCount == 0)
+                    return null;
+
                 childNode = uldManager.NodeList[0];
                 return childNode == null ? null : GetNodeByIDChain(childNode, [.. newList]);
             }
@@ -222,27 +359,49 @@ public static unsafe class Utils
     }
     public static bool IsAddonActive(string AddonName) // Used to see if the addon is active/ready to be fired on
     {
-        var addon = RaptureAtkUnitManager.Instance()->GetAddonByName(AddonName);
+        // RaptureAtkUnitManager.Instance() 經 RaptureAtkModule 走 UIModule，UI 尚未建立時回 null。
+        // 取不到就當作 addon 不存在——與下面 addon == null 完全相同的失敗形式。
+        var manager = RaptureAtkUnitManager.Instance();
+        if (manager == null)
+            return false;
+
+        var addon = manager->GetAddonByName(AddonName);
         return addon != null && addon->IsVisible && addon->IsReady;
     }
 
 
-    public static int GetCallback(string questName)
+    /// <summary>交納清單讀得到項目，但沒有這張理符。</summary>
+    public const int CallbackNotListed = -1;
+    /// <summary>這一刻一個項目都讀不到（例如清單還沒填好），下一次再讀。</summary>
+    public const int CallbackUnreadable = -2;
+
+    /// <returns>SelectIconString 的選項索引；比不到一律回負值，呼叫端不可拿負值去按。</returns>
+    /// <param name="readEntries">非 null 時收集這次讀到的項目文字，給診斷用。</param>
+    public static int GetCallback(string questName, List<string>? readEntries = null)
     {
-        int callback = 0;
+        // 與 GrabLeve 比對委託人清單用同一套規則。
+        var compareInfo = CultureInfo.InvariantCulture.CompareInfo;
+        const CompareOptions compareOptions = CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace;
+        var readAny = false;
 
         for (int i = 1; i < 18; i++)
         {
             string CurrentText = GetNodeText("SelectIconString", 2, i, 4);
-            if (CurrentText == questName)
+            if (string.IsNullOrEmpty(CurrentText))
+                continue;
+
+            readAny = true;
+            readEntries?.Add(CurrentText);
+            if (!string.IsNullOrEmpty(questName) && compareInfo.Compare(CurrentText, questName, compareOptions) == 0)
             {
-                callback = i - 1;
-                PluginVerbos($"Callback number is: {callback}");
-                break;
+                var callback = i - 1;
+                if (LogGate.VerboseEnabled)
+                    PluginVerbos($"Callback number is: {callback}");
+                return callback;
             }
         }
 
-        return callback;
+        return readAny ? CallbackNotListed : CallbackUnreadable;
     }
 
     #endregion
@@ -425,10 +584,22 @@ public static unsafe class Utils
             }
         }
 
+        // C.workList and C.LevePriority are persisted config and can outlive the dictionaries built from the sheet
+        // (a patch changing a row's LeveAssignmentType, a hand-edited or shared config file). Their consumers index
+        // LeveDictionary/CraftDictionary directly, so drop the unresolvable entries once, here - otherwise the first
+        // stale key surfaces as a KeyNotFoundException inside a draw loop or a scheduler task.
+        // Only the in-memory copy is pruned; the file on disk is left alone until the user saves.
+        var staleWork = C.workList.RemoveAll(e => !LeveDictionary.ContainsKey(e.LeveID) || !CraftDictionary.ContainsKey(e.LeveID));
+        if (staleWork > 0)
+            ECommons.Logging.PluginLog.Warning($"Dropped {staleWork} worklist entry/entries referencing leves that are not available on this client.");
+
+        foreach (var staleKey in C.LevePriority.Keys.Where(k => !LeveDictionary.ContainsKey(k)).ToList())
+            C.LevePriority.Remove(staleKey);
+
         foreach (var leveId in C.LevePriority)
         {
-            var leve = leveId.Key;
-            LeveDictionary[leve].Priority = leveId.Value; //
+            if (LeveDictionary.TryGetValue(leveId.Key, out var leveData))
+                leveData.Priority = leveId.Value;
         }
     }
 
@@ -838,7 +1009,7 @@ public static unsafe class Utils
 
         Svc.Log.Debug($"{baseUrl}{base64}");
         ImGui.SetClipboardText($"{baseUrl}{base64}");
-        Notify.Success("Link copied to clipboard");
+        Notify.Success("Link copied to clipboard".Loc());
     }
 
     public static Dictionary<uint, int> AllItems = new();

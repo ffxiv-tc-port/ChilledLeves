@@ -15,7 +15,7 @@ namespace ChilledLeves.Ui;
 internal class SettingsWindow : Window
 {
     public SettingsWindow() :
-        base($"Worklist Window {P.GetType().Assembly.GetName().Version} ###ChilledLevesWorkshopWindow")
+        base($"{"Worklist Window".Loc()} {P.GetType().Assembly.GetName().Version} ###ChilledLevesWorkshopWindow")
     {
         Flags = ImGuiWindowFlags.None;
         SizeConstraints = new()
@@ -39,7 +39,7 @@ internal class SettingsWindow : Window
         int styleCount = ThemeHelper.BeginTheming(usingIceTheme);
         
         ImGuiEx.EzTabBar("ChilledLeves Settings Window",
-            ("Worklist Planner", MainPlanner, null, true)//,
+            ("Worklist Planner".Loc(), MainPlanner, null, true)//,
             //("Gathering Planner", GatheringMode, null, true)
             );
         
@@ -67,27 +67,27 @@ internal class SettingsWindow : Window
             
             float navButtonHeight = textLineHeight * 1.5f;
             float btnPadding = 8 * fontScale;
-            float mainBtnWidth = ImGui.CalcTextSize("Main Window").X + btnPadding * 2;
-            float worklistBtnWidth = ImGui.CalcTextSize("Worklist Window").X + btnPadding * 2;
-            float gatherBtnWidth = ImGui.CalcTextSize("Priority Leve Grind Window").X + btnPadding * 2;
+            float mainBtnWidth = ImGui.CalcTextSize("Main Window".Loc()).X + btnPadding * 2;
+            float worklistBtnWidth = ImGui.CalcTextSize("Worklist Window".Loc()).X + btnPadding * 2;
+            float gatherBtnWidth = ImGui.CalcTextSize("Priority Leve Grind Window".Loc()).X + btnPadding * 2;
             
             // Left-aligned buttons
             ImGui.BeginGroup();
-            if (ImGui.Button("Main Window", new Vector2(mainBtnWidth, navButtonHeight)))
+            if (ImGui.Button("Main Window".Loc(), new Vector2(mainBtnWidth, navButtonHeight)))
             {
                 P.mainWindow.IsOpen = true;
             }
             
             ImGui.SameLine();
             
-            if (ImGui.Button("Worklist Window", new Vector2(worklistBtnWidth, navButtonHeight)))
+            if (ImGui.Button("Worklist Window".Loc(), new Vector2(worklistBtnWidth, navButtonHeight)))
             {
                 P.workListUi.IsOpen = true;
             }
             
             ImGui.SameLine();
             
-            if (ImGui.Button("Priority Leve Grind Window", new Vector2(gatherBtnWidth, navButtonHeight)))
+            if (ImGui.Button("Priority Leve Grind Window".Loc(), new Vector2(gatherBtnWidth, navButtonHeight)))
             {
                 P.gatherModeUi.IsOpen = true;
             }
@@ -95,7 +95,7 @@ internal class SettingsWindow : Window
             
             // Right-aligned allowances info
             float windowWidth = ImGui.GetWindowWidth();
-            string allowancesInfo = $"Allowances: {Allowances}/100 | Next in: {NextAllowances:hh\\:mm\\:ss}";
+            string allowancesInfo = "Allowances: ??/100 | Next in: ??".Loc(Allowances, NextAllowances.ToString("hh':'mm':'ss"));
             float infoWidth = ImGui.CalcTextSize(allowancesInfo).X;
             
             ImGui.SameLine(windowWidth - infoWidth - btnPadding);
@@ -112,27 +112,27 @@ internal class SettingsWindow : Window
         {
             float navButtonHeight = textLineHeight * 1.5f;
             float btnPadding = 8 * fontScale;
-            float mainBtnWidth = ImGui.CalcTextSize("Main Window").X + btnPadding * 2;
-            float worklistBtnWidth = ImGui.CalcTextSize("Worklist Window").X + btnPadding * 2;
-            float gatherBtnWidth = ImGui.CalcTextSize("Priority Leve Grind Window").X + btnPadding * 2;
+            float mainBtnWidth = ImGui.CalcTextSize("Main Window".Loc()).X + btnPadding * 2;
+            float worklistBtnWidth = ImGui.CalcTextSize("Worklist Window".Loc()).X + btnPadding * 2;
+            float gatherBtnWidth = ImGui.CalcTextSize("Priority Leve Grind Window".Loc()).X + btnPadding * 2;
             
             // Left-aligned buttons
             ImGui.BeginGroup();
-            if (ImGui.Button("Main Window", new Vector2(mainBtnWidth, navButtonHeight)))
+            if (ImGui.Button("Main Window".Loc(), new Vector2(mainBtnWidth, navButtonHeight)))
             {
                 P.mainWindow.IsOpen = true;
             }
             
             ImGui.SameLine();
             
-            if (ImGui.Button("Worklist Window", new Vector2(worklistBtnWidth, navButtonHeight)))
+            if (ImGui.Button("Worklist Window".Loc(), new Vector2(worklistBtnWidth, navButtonHeight)))
             {
                 P.workListUi.IsOpen = true;
             }
             
             ImGui.SameLine();
             
-            if (ImGui.Button("Priority Leve Grind Window", new Vector2(gatherBtnWidth, navButtonHeight)))
+            if (ImGui.Button("Priority Leve Grind Window".Loc(), new Vector2(gatherBtnWidth, navButtonHeight)))
             {
                 P.gatherModeUi.IsOpen = true;
             }
@@ -140,7 +140,7 @@ internal class SettingsWindow : Window
             
             // Right-aligned allowances info
             float windowWidth = ImGui.GetWindowWidth();
-            string allowancesInfo = $"Allowances: {Allowances}/100 | Next in: {NextAllowances:hh\\:mm\\:ss}";
+            string allowancesInfo = "Allowances: ??/100 | Next in: ??".Loc(Allowances, NextAllowances.ToString("hh':'mm':'ss"));
             float infoWidth = ImGui.CalcTextSize(allowancesInfo).X;
             
             ImGui.SameLine(windowWidth - infoWidth - btnPadding);
@@ -151,7 +151,7 @@ internal class SettingsWindow : Window
         ImGui.Separator();
         ImGui.Spacing();
 
-        ImGui.Text($"Amount of Accepted Leves: {GetNumAcceptedLeveQuests()}");
+        ImGui.Text("Amount of Accepted Leves: ??".Loc(GetNumAcceptedLeveQuests()));
 
         // Apply control styling for checkboxes
         if (usingIceTheme)
@@ -166,7 +166,7 @@ internal class SettingsWindow : Window
         }
         
         ImGui.SameLine();
-        ImGui.Text("Keep list after completion?");
+        ImGui.Text("Keep list after completion?".Loc());
         
         if (usingIceTheme)
         {
@@ -180,7 +180,7 @@ internal class SettingsWindow : Window
         }
         
         ImGui.SameLine();
-        ImGui.Text("Increase delay between leves");
+        ImGui.Text("Increase delay between leves".Loc());
         
         if (usingIceTheme)
         {
@@ -194,7 +194,7 @@ internal class SettingsWindow : Window
         }
         
         ImGui.SameLine();
-        ImGui.Text("Grab multiple leve's from vendor");
+        ImGui.Text("Grab multiple leve's from vendor".Loc());
 
         // Begin the worklist table with themed headers
         if (usingIceTheme)
@@ -216,12 +216,12 @@ internal class SettingsWindow : Window
                 float needColWidth = Math.Max(50, textLineHeight * 3);
                 float haveColWidth = Math.Max(100, textLineHeight * 6);
                 
-                ImGui.TableSetupColumn("Level###CrafterLevels", ImGuiTableColumnFlags.WidthFixed, levelColWidth);
-                ImGui.TableSetupColumn("Leve Name###CrafterLeveNames", ImGuiTableColumnFlags.WidthFixed, nameColWidth);
-                ImGui.TableSetupColumn("Run Amount###CrafterRunAmounts", ImGuiTableColumnFlags.WidthFixed, runColWidth);
-                ImGui.TableSetupColumn("Item Turnin###CrafterTurninItems", ImGuiTableColumnFlags.WidthFixed, itemColWidth);
-                ImGui.TableSetupColumn("Need###CrafterAmountNecessary", ImGuiTableColumnFlags.WidthFixed, needColWidth);
-                ImGui.TableSetupColumn("Have?###CrafterCompleteCheck", ImGuiTableColumnFlags.WidthFixed, haveColWidth);
+                ImGui.TableSetupColumn("Level".Loc() + "###CrafterLevels", ImGuiTableColumnFlags.WidthFixed, levelColWidth);
+                ImGui.TableSetupColumn("Leve Name".Loc() + "###CrafterLeveNames", ImGuiTableColumnFlags.WidthFixed, nameColWidth);
+                ImGui.TableSetupColumn("Run Amount".Loc() + "###CrafterRunAmounts", ImGuiTableColumnFlags.WidthFixed, runColWidth);
+                ImGui.TableSetupColumn("Item Turnin".Loc() + "###CrafterTurninItems", ImGuiTableColumnFlags.WidthFixed, itemColWidth);
+                ImGui.TableSetupColumn("Need".Loc() + "###CrafterAmountNecessary", ImGuiTableColumnFlags.WidthFixed, needColWidth);
+                ImGui.TableSetupColumn("Have?".Loc() + "###CrafterCompleteCheck", ImGuiTableColumnFlags.WidthFixed, haveColWidth);
 
                 ImGui.TableHeadersRow();
                 
@@ -249,12 +249,12 @@ internal class SettingsWindow : Window
                 float needColWidth = Math.Max(50, textLineHeight * 3);
                 float haveColWidth = Math.Max(100, textLineHeight * 6);
                 
-                ImGui.TableSetupColumn("Level###CrafterLevels", ImGuiTableColumnFlags.WidthFixed, levelColWidth);
-                ImGui.TableSetupColumn("Leve Name###CrafterLeveNames", ImGuiTableColumnFlags.WidthFixed, nameColWidth);
-                ImGui.TableSetupColumn("Run Amount###CrafterRunAmounts", ImGuiTableColumnFlags.WidthFixed, runColWidth);
-                ImGui.TableSetupColumn("Item Turnin###CrafterTurninItems", ImGuiTableColumnFlags.WidthFixed, itemColWidth);
-                ImGui.TableSetupColumn("Need###CrafterAmountNecessary", ImGuiTableColumnFlags.WidthFixed, needColWidth);
-                ImGui.TableSetupColumn("Have?###CrafterCompleteCheck", ImGuiTableColumnFlags.WidthFixed, haveColWidth);
+                ImGui.TableSetupColumn("Level".Loc() + "###CrafterLevels", ImGuiTableColumnFlags.WidthFixed, levelColWidth);
+                ImGui.TableSetupColumn("Leve Name".Loc() + "###CrafterLeveNames", ImGuiTableColumnFlags.WidthFixed, nameColWidth);
+                ImGui.TableSetupColumn("Run Amount".Loc() + "###CrafterRunAmounts", ImGuiTableColumnFlags.WidthFixed, runColWidth);
+                ImGui.TableSetupColumn("Item Turnin".Loc() + "###CrafterTurninItems", ImGuiTableColumnFlags.WidthFixed, itemColWidth);
+                ImGui.TableSetupColumn("Need".Loc() + "###CrafterAmountNecessary", ImGuiTableColumnFlags.WidthFixed, needColWidth);
+                ImGui.TableSetupColumn("Have?".Loc() + "###CrafterCompleteCheck", ImGuiTableColumnFlags.WidthFixed, haveColWidth);
 
                 ImGui.TableHeadersRow();
                 
@@ -337,7 +337,7 @@ internal class SettingsWindow : Window
                 if (ImGui.IsItemHovered())
                 {
                     ImGui.BeginTooltip();
-                    ImGui.Text($"Have: {currentAmount}");
+                    ImGui.Text("Have: ??".Loc(currentAmount));
                     ImGui.EndTooltip();
                 }
             }

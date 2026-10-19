@@ -28,8 +28,16 @@ namespace ChilledLeves.Scheduler
             EnableTicking = false;
             GatheringMode = false;
             WorkListMode = false;
+            // 先取消自己送出、可能還在算的尋路，再停路徑；沒送過就不碰別人的尋路。
+            if (TaskMoveTo.IssuedPathfind)
+            {
+                TaskMoveTo.IssuedPathfind = false;
+                P.navmesh.PathfindCancelAll();
+            }
             P.navmesh.Stop();
             P.taskManager.Abort();
+            // 交納視窗逐格點選是另一個自己跑的佇列，不清的話停止後仍會繼續點。
+            Handlers.GenericManager.taskManager.Abort();
             
             foreach (var kpd in ListCycled)
             {
@@ -86,18 +94,28 @@ namespace ChilledLeves.Scheduler
             {
                 if (GenericThrottle)
                 {
+                    if (LogGate.VerboseEnabled)
+                        PluginLog.Verbose("We are currently running");
                     if (!P.taskManager.IsBusy)
                     {
                         if (WorkListMode)
                         {
+                            if (LogGate.VerboseEnabled)
+                                PluginLog.Verbose("Plugin is running in worklist mode");
+
                             uint leve = 0;
                             bool readyForTurnin = false;
                             bool hasLeves = false;
                             if (C.workList.Count > 0)
                             {
+                                if (LogGate.VerboseEnabled)
+                                    PluginLog.Verbose("Current Worklist Count is more than 0, seeing if we have any valid entries");
                                 // Checking initially to see if any leves can be turned in
-                                foreach (var entry in C.workList)
+                                // 迴圈中途會移除項目後繼續看下一筆：用索引走（List 的 foreach 移除後下一次 MoveNext 必擲例外）。
+                                var workList = C.workList;
+                                for (var i = 0; i < workList.Count; i++)
                                 {
+                                    var entry = workList[i];
                                     if (entry.InputValue == 0)
                                     {
                                         PluginDebug($"LeveID: {entry.LeveID} is 0, adding to Leve Entry");
@@ -108,19 +126,21 @@ namespace ChilledLeves.Scheduler
                                             ListCycled.Add(new LeveEntry { LeveID = entry.LeveID, InputValue = 0 });
                                             PluginDebug($"List Cycled entry added {entry.LeveID}");
                                         }
-                                        C.workList.Remove(entry);
+                                        workList.RemoveAt(i--);
                                     }
                                     else if (entry.InputValue != 0)
                                     {
                                         if (!readyForTurnin)
                                         {
-                                            PluginVerbos($"Checking to see if the leve can be grabbed/turned in. LeveID: {entry.LeveID}");
+                                            if (LogGate.VerboseEnabled)
+                                                PluginVerbos($"Checking to see if the leve can be grabbed/turned in. LeveID: {entry.LeveID}");
                                             var currentAmount = GetItemCount((int)CraftDictionary[entry.LeveID].ItemID);
                                             var necessaryAmount = CraftDictionary[entry.LeveID].TurninAmount;
 
                                             if (IsAccepted(entry.LeveID) && currentAmount >= necessaryAmount)
                                             {
-                                                PluginVerbos($"LeveID: {entry.LeveID} has been accepted. Checking to see if it can be turned in");
+                                                if (LogGate.VerboseEnabled)
+                                                    PluginVerbos($"LeveID: {entry.LeveID} has been accepted. Checking to see if it can be turned in");
                                                 leve = entry.LeveID;
                                                 readyForTurnin = true;
                                                 break;
@@ -130,8 +150,11 @@ namespace ChilledLeves.Scheduler
                                 }
                                 if (!readyForTurnin)
                                 {
-                                    foreach (var entry in C.workList)
+                                    if (LogGate.VerboseEnabled)
+                                        PluginLog.Verbose("No items are ready for turnin/");
+                                    for (var i = 0; i < workList.Count; i++)
                                     {
+                                        var entry = workList[i];
                                         if (entry.InputValue == 0)
                                         {
                                             PluginDebug($"LeveID: {entry.LeveID} is 0, adding to Leve Entry");
@@ -142,11 +165,12 @@ namespace ChilledLeves.Scheduler
                                                 ListCycled.Add(new LeveEntry { LeveID = entry.LeveID, InputValue = 0 });
                                                 PluginDebug($"List Cycled entry added {entry.LeveID}");
                                             }
-                                            C.workList.Remove(entry);
+                                            workList.RemoveAt(i--);
                                         }
                                         else if (entry.InputValue != 0)
                                         {
-                                            PluginVerbos($"Worklist has found that: {entry.LeveID} has an amount that isn't set to 0. Starting to work on this turnin process");
+                                            if (LogGate.VerboseEnabled)
+                                                PluginVerbos($"Worklist has found that: {entry.LeveID} has an amount that isn't set to 0. Starting to work on this turnin process");
                                             var templeve = entry.LeveID;
                                             var currentAmount = GetItemCount((int)CraftDictionary[templeve].ItemID);
                                             var necessaryAmount = CraftDictionary[templeve].TurninAmount;
@@ -155,7 +179,8 @@ namespace ChilledLeves.Scheduler
 
                                             if (canTurnin && isLevel)
                                             {
-                                                PluginVerbos("You have the necessary amount/is the proper level to run this leve. Grabbing/Turning In");
+                                                if (LogGate.VerboseEnabled)
+                                                    PluginVerbos("You have the necessary amount/is the proper level to run this leve. Grabbing/Turning In");
                                                 hasLeves = true;
                                                 leve = templeve;
                                                 break;
@@ -168,7 +193,7 @@ namespace ChilledLeves.Scheduler
                                                     ListCycled.Add(new LeveEntry { LeveID = entry.LeveID, InputValue = entry.InputValue });
                                                     PluginDebug($"List Cycled entry added {entry.LeveID}");
                                                 }
-                                                C.workList.Remove(entry);
+                                                workList.RemoveAt(i--);
                                             }
                                         }
                                     }
@@ -186,11 +211,11 @@ namespace ChilledLeves.Scheduler
 
                                         if (IsInZone(zoneID))
                                         {
-                                            P.taskManager.Enqueue(() => PluginInfo("Player is the correct zone, checking to see if they're in the right distance"));
-                                            P.taskManager.Enqueue(() => PluginInfo($"Distance to NPC: {Player.DistanceTo(NPCLocation)} Interact Distance: {InteractDistance}"));
+                                            P.taskManager.Enqueue(() => PluginInfo("Player is the correct zone, checking to see if they're in the right distance"), "Log Message");
+                                            P.taskManager.Enqueue(() => PluginInfo($"Distance to NPC: {Player.DistanceTo(NPCLocation)} Interact Distance: {InteractDistance}"), "Log Message");
                                             if (Player.DistanceTo(NPCLocation) <= InteractDistance)
                                             {
-                                                P.taskManager.Enqueue(() => PluginInfo("Close to the NPC, Starting Turnin Process"));
+                                                P.taskManager.Enqueue(() => PluginInfo("Close to the NPC, Starting Turnin Process"), "Log Message");
                                                 TaskTurninMulti.Enqueue(zoneID);
                                             }
                                             else 
@@ -298,14 +323,14 @@ namespace ChilledLeves.Scheduler
                             {
                                 string ChatText = "You have hit the level set, stopping the farming process";
                                 PluginVerbos(ChatText);
-                                Svc.Chat.Print(ChatText);
+                                Svc.Chat.Print(ChatText.Loc());
                                 DisablePlugin();
                             }
                             else if (C.RunUntilSelected == "All Leves Complete" && AllCompleted())
                             {
                                 string ChatText = "All leves have been completed on for this class, topping the process";
                                 PluginVerbos(ChatText);
-                                Svc.Chat.Print(ChatText);
+                                Svc.Chat.Print(ChatText.Loc());
                                 DisablePlugin();
                             }
                             else
@@ -325,14 +350,16 @@ namespace ChilledLeves.Scheduler
                                         var questCheck = HasAcceptedLeve();
                                         if (questCheck != 0 && IsAccepted(questCheck))
                                         {
-                                            PluginVerbos($"LeveId: {leveId} has been found and can be turned in. Proceeding onto the turnin process");
+                                            if (LogGate.VerboseEnabled)
+                                                PluginVerbos($"LeveId: {leveId} has been found and can be turned in. Proceeding onto the turnin process");
                                             leveId = HasAcceptedLeve();
                                             isReadyforTurnin = true;
                                             break;
                                         }
                                         else if (currentAmount >= turninAmount)
                                         {
-                                            PluginVerbos($"LeveId: {leveId} | leveName: {LeveDictionary[leveId].LeveName} has enough, but hasn't been accepted yet");
+                                            if (LogGate.VerboseEnabled)
+                                                PluginVerbos($"LeveId: {leveId} | leveName: {LeveDictionary[leveId].LeveName} has enough, but hasn't been accepted yet");
                                             canGrab = true;
                                             break;
                                         }
@@ -341,7 +368,8 @@ namespace ChilledLeves.Scheduler
 
                                 if (!isReadyforTurnin && canGrab)
                                 {
-                                    PluginVerbos("No leves are ready for turnin, but you can grab a leve thankfully");
+                                    if (LogGate.VerboseEnabled)
+                                        PluginVerbos("No leves are ready for turnin, but you can grab a leve thankfully");
                                 }
 
                                 if (isReadyforTurnin)

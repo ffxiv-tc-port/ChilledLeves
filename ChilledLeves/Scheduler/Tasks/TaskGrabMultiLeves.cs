@@ -32,10 +32,15 @@ namespace ChilledLeves.Scheduler.Tasks
             ViableLeves.Clear();
             foreach (var leve in C.workList)
             {
+                // ViableLeves is cleared on entry, so its ContainsKey guard says nothing about
+                // LeveDictionary - the two have different key sets (C.workList is persisted
+                // config, LeveDictionary is rebuilt from the sheet). Skip what we cannot resolve.
+                if (!LeveDictionary.TryGetValue(leve.LeveID, out var leveData))
+                    continue;
+
                 if (!ViableLeves.ContainsKey(leve.LeveID))
                 {
-                    string leveName = LeveDictionary[leve.LeveID].LeveName;
-                    ViableLeves.Add(leve.LeveID, leveName);
+                    ViableLeves.Add(leve.LeveID, leveData.LeveName);
                 }
             }
         }
@@ -78,19 +83,21 @@ namespace ChilledLeves.Scheduler.Tasks
 
                     if (!leveMatch.Equals(default(KeyValuePair<uint, string>))) // If a match is found/that it didn't find one, and you haven't accepted the quest yet
                     {
-                        PluginVerbos($"Leve: {leveMatch.Value} [{leveMatch.Key}] was found");
+                        if (LogGate.VerboseEnabled)
+                            PluginVerbos($"Leve: {leveMatch.Value} [{leveMatch.Key}] was found");
                         var leveId = leveMatch.Key;
                         var leveName = leveMatch.Value;
                         var itemId = CraftDictionary[leveId].ItemID;
                         var itemAmountRequired = CraftDictionary[leveId].TurninAmount;
                         var itemAmountHave = GetItemCount((int)itemId);
 
-                        if (GenericThrottle)
+                        // GenericThrottle 必須先判：它是共用的節流計數，關掉記錄也要照常消耗。
+                        if (GenericThrottle && LogGate.VerboseEnabled)
                             PluginVerbos($"Leve {leveMatch.Value}: Accepted? {IsAccepted(leveId)}");
                         // if 3 <= 2
                         if (itemAmountRequired <= itemAmountHave && !IsAccepted(leveId) && Allowances > 0)
                         {
-                            if (GenericThrottle)
+                            if (GenericThrottle && LogGate.VerboseEnabled)
                             PluginVerbos($"Leve: {leveName} [{leveId}] has not been picked up yet");
 
                             foundLeve = true;

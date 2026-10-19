@@ -9,6 +9,15 @@
 
         internal unsafe static bool? UpdateWorkList(uint leveID)
         {
+            // Only count a leve as done if it really left the accepted list. The turn-in waits that run
+            // before us no longer abort the queue on timeout, so we can now be reached with the turn-in
+            // unfinished; decrementing then would silently drop a leve the player still owes.
+            if (IsAccepted(leveID))
+            {
+                PluginDebug($"LeveID {leveID} is still accepted, not counting it as turned in");
+                return true;
+            }
+
             #pragma warning disable CS8600
             LeveEntry foundEntry = C.workList.FirstOrDefault(entry => entry.LeveID == leveID);
 

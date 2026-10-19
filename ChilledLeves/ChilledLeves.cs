@@ -33,6 +33,7 @@ public sealed class ChilledLeves : IDalamudPlugin
     internal NavmeshIPC navmesh;
     internal PandoraIPC pandora;
     internal ArtisanIPC artisan;
+    private StopAllIpc? stopAllIpc;
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     public ChilledLeves(IDalamudPluginInterface pi)
@@ -40,6 +41,14 @@ public sealed class ChilledLeves : IDalamudPlugin
     {
         P = this;
         ECommonsMain.Init(pi, P, ECommons.Module.DalamudReflector, ECommons.Module.ObjectFunctions);
+        // 讓「呼叫了對方沒有的 IPC 方法」不再完全靜默。
+        // 訂閱越早越好：事件只在 IPC **呼叫**當下才被查閱，在這裡訂閱就涵蓋往後所有呼叫。
+        EzIpcFailureLog.Enable();
+        ECommons.LanguageHelpers.Localization.Init("ChineseTraditional");
+        // AddonPressGuard 的幀時鐘：在這裡訂閱是為了讓它排在本外掛所有 Framework.Update
+        // 處理常式的最前面（整條多播委派共用一個 try/catch，前面的人擲例外會讓後面的人
+        // 那個 tick 整個不跑）。時鐘停住 = 守衛的逃生口永不到期 = 死鎖。
+        Scheduler.Handlers.AddonPressGuard.EnsureClockRunning();
         new ECommons.Schedulers.TickScheduler(Load);
     }
 
@@ -75,37 +84,48 @@ public sealed class ChilledLeves : IDalamudPlugin
         {
             workListUi.IsOpen = true;
         };
-        EzCmd.Add("/chilledleves", OnCommand, """
-            Open plugin interface
-            /chilledleves add [leveID] [amount] - adds the leveID/amount to worklist
-            /chilledleves clear - clears the worklist 
-            /chilledleves start | stop - starts/stops the turnin process
-            /chilledleves s|settings - Opens the worklist menu
-            /leveitalone - alias
-            """);
+        EzCmd.Add("/chilledleves", OnCommand, string.Join("\n",
+            "Open plugin interface".Loc(),
+            "/chilledleves add [leveID] [amount] - adds the leveID/amount to worklist".Loc(),
+            "/chilledleves clear - clears the worklist".Loc(),
+            "/chilledleves start | stop - starts/stops the turnin process".Loc(),
+            "/chilledleves s|settings - Opens the worklist menu".Loc(),
+            "/leveitalone - alias".Loc()));
         EzCmd.Add("/leveitalone", OnCommand);
         Svc.Framework.Update += Tick;
+        stopAllIpc = new();
     }
 
     private void Tick(object _)
     {
-        if (SchedulerMain.AreWeTicking && Svc.ClientState.LocalPlayer != null)
+        stopAllIpc?.ProcessPending();
+        Scheduler.Handlers.StepTimeoutStop.ProcessPending();
+        if (SchedulerMain.AreWeTicking && Svc.Objects.LocalPlayer != null)
         {
             SchedulerMain.Tick();
         }
         GenericManager.Tick();
         TextAdvancedManager.Tick();
         YesAlreadyManager.Tick();
+        AlignCameraManager.Tick();
         SoundAlert.Tick();
     }
 
     public void Dispose()
     {
+        Safe(() => stopAllIpc?.Dispose());
         Safe(() => Svc.Framework.Update -= Tick);
         Safe(() => Svc.PluginInterface.UiBuilder.Draw -= windowSystem.Draw);
-        ECommonsMain.Dispose();
+        // 拆掉 AddonPressGuard 掛在 AddonLifecycle 上的解除封鎖監聽器，
+        // 不留任何指向本組件的委派（否則熱重載後仍會被叫到）。
+        Safe(Scheduler.Handlers.AddonPressGuard.ForceTeardown);
+        Safe(EzIpcFailureLog.Disable);
+        // 🔴 一定要在 ECommonsMain.Dispose() **之前**:還原要靠 EzIPC 的委派打回 vnavmesh,
+        //    ECommons 收掉之後那些委派就不保證還能用了(而且失敗是靜默的)。
+        Safe(AlignCameraManager.RestoreNow);
         Safe(TextAdvancedManager.UnlockTA);
         Safe(YesAlreadyManager.Unlock);
+        ECommonsMain.Dispose();
     }
 
     private void OnCommand(string command, string args)
@@ -132,6 +152,14 @@ public sealed class ChilledLeves : IDalamudPlugin
         }
         else if (firstArg.ToLower() == "add")
         {
+            // 上面只擋了 Length == 0,而 "add" 需要再吃兩個參數。
+            // 少打參數(例如只輸入 /chilledleves add)會直接越界擲 IndexOutOfRangeException。
+            if (subcommands.Length < 3)
+            {
+                PluginVerbos("用法:/chilledleves add <理符ID> <次數1-100>");
+                return;
+            }
+
             string secondCommand = subcommands[1];
             string thirdCommand = subcommands[2];
             uint leveId = 0;
@@ -170,6 +198,11 @@ public sealed class ChilledLeves : IDalamudPlugin
         }
         else if (firstArg.ToLower() == "start")
         {
+            // 刻意不照上游把 WorkListMode = true 放進 EnablePlugin()：採集模式啟動鈕是
+            // 「WorkListMode = false → GatheringMode = true → EnablePlugin()」，會被反手打開，
+            // 而 Tick() 先判 WorkListMode 才判 GatheringMode ⇒ 採集模式永遠跑不到。
+            // 改在呼叫端設定，與其餘工作清單啟動點（MainWindow／WorkListUi）寫法一致。
+            SchedulerMain.WorkListMode = true;
             SchedulerMain.EnablePlugin();
             PluginVerbos("Starting the turnin process");
             return;

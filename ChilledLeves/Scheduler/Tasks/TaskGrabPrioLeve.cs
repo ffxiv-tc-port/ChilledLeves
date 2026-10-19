@@ -62,7 +62,8 @@ namespace ChilledLeves.Scheduler.Tasks
                 foreach (var l in m.Levequests)
                 {
                     PotentionalLeves.Add(l.Name);
-                    PluginDebug($"Potentional Leves: {l.Name}");
+                    if (LogGate.DebugEnabled)
+                        PluginDebug($"Potentional Leves: {l.Name}");
                 }
 
                 string? prioLeve = GetLowestPriorityLeveName(PotentionalLeves);
@@ -144,7 +145,7 @@ namespace ChilledLeves.Scheduler.Tasks
             if (!IsAccepted(leveId))
             {
                 PluginVerbos("You can't do anymore leves, stopping the process");
-                Svc.Chat.Print("No more potentional leves, stopping gathering mode");
+                Svc.Chat.Print("No more potentional leves, stopping gathering mode".Loc());
                 SchedulerMain.DisablePlugin();
             }
             else

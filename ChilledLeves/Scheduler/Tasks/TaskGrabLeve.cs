@@ -17,20 +17,20 @@ namespace ChilledLeves.Scheduler.Tasks
 
         internal static void Enqueue(uint leveID, uint npcID, int classButton)
         {
-            P.taskManager.Enqueue(() => PluginLog.Information($"Leve Type is: {LeveDictionary[leveID].JobAssignmentType}"));
+            P.taskManager.Enqueue(() => PluginLog.Information($"Leve Type is: {LeveDictionary[leveID].JobAssignmentType}"), "Log Message");
             TaskInteract.Enqueue(npcID);
             var jobType = LeveDictionary[leveID].JobAssignmentType;
-            P.taskManager.Enqueue(() => PluginLog.Information($"Job Type is: {jobType}"));
+            P.taskManager.Enqueue(() => PluginLog.Information($"Job Type is: {jobType}"), "Log Message");
 
             if (jobType == 4)
             {
-                P.taskManager.Enqueue(() => PluginLog.Information($"Fisher leve Detected"));
+                P.taskManager.Enqueue(() => PluginLog.Information($"Fisher leve Detected"), "Log Message");
                 P.taskManager.Enqueue(() => UpdateFisherLeves(), "Updating fisher Leves");
                 P.taskManager.Enqueue(() => GrabFisher((ushort)leveID, npcID, classButton), "Grabbing fisher leves", DConfig);
             }
             else
             {
-                P.taskManager.Enqueue(() => PluginLog.Information($"Non Fisher leve Detected"));
+                P.taskManager.Enqueue(() => PluginLog.Information($"Non Fisher leve Detected"), "Log Message");
                 P.taskManager.Enqueue(() => GrabLeve((ushort)leveID, npcID, classButton), "Grab Leve Task", DConfig);
             }
             P.taskManager.Enqueue(() => LeaveLeveVendor(npcID), "leaving Leve Vendor", DConfig);
@@ -42,10 +42,16 @@ namespace ChilledLeves.Scheduler.Tasks
             FisherDictionary.Clear();
             foreach (var leve in C.workList)
             {
-                if (!FisherDictionary.ContainsKey(leve.LeveID) && LeveDictionary[leve.LeveID].JobAssignmentType == 4)
+                // FisherDictionary is cleared on entry, so its ContainsKey guard says nothing
+                // about LeveDictionary - the two have different key sets (C.workList is
+                // persisted config, LeveDictionary is rebuilt from the sheet). Skip anything we
+                // cannot resolve instead of throwing out of the task.
+                if (!LeveDictionary.TryGetValue(leve.LeveID, out var leveData))
+                    continue;
+
+                if (!FisherDictionary.ContainsKey(leve.LeveID) && leveData.JobAssignmentType == 4)
                 {
-                    string leveName = LeveDictionary[leve.LeveID].LeveName;
-                    FisherDictionary.Add(leve.LeveID, leveName);
+                    FisherDictionary.Add(leve.LeveID, leveData.LeveName);
                 }
             }
         }
@@ -117,15 +123,14 @@ namespace ChilledLeves.Scheduler.Tasks
                     PluginVerbos($"2: It's a gathering leve and the vendor doesn't have this leve currently.");
                     PluginVerbos($"In the case of #2, please do other gathering leves of this type to be able to do this leve potentionally");
 
-                    foreach (var kdp in C.workList)
+                    // 移出的是找不到的那一張，不是清單第一項；停止時 DisablePlugin 會從 ListCycled 放回去。
+                    var missing = C.workList.FirstOrDefault(e => e.LeveID == leveID);
+                    if (missing != null)
                     {
-                        if (C.workList.Any(e => e.LeveID == leveID))
-                        {
-                            ListCycled.Add(kdp);
-                            C.workList.Remove(kdp);
-                            break;
-                        }
+                        ListCycled.Add(missing);
+                        C.workList.Remove(missing);
                     }
+                    PluginLog.Information($"[ChilledLeves] 理符委託人那裡找不到「{LeveName}」（{leveID}），先從工作清單移出這一張，停止時會放回。");
                     return true;
                 }
             }
@@ -162,7 +167,8 @@ namespace ChilledLeves.Scheduler.Tasks
                 foreach (var l in m.Levequests)
                 {
                     PotentionalLeves.Add(l.Name);
-                    PluginDebug($"Potentional Leves: {l.Name}");
+                    if (LogGate.DebugEnabled)
+                        PluginDebug($"Potentional Leves: {l.Name}");
                 }
 
                 string? firstLeve = GetFirstLeve(PotentionalLeves);

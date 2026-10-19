@@ -10,6 +10,7 @@ global using Dalamud.Interface;
 global using Dalamud.Plugin;
 global using ECommons.DalamudServices;
 global using ECommons.ImGuiMethods;
+global using ECommons.LanguageHelpers;
 global using ECommons;
 global using Dalamud.Bindings.ImGui;
 global using System.Linq;
