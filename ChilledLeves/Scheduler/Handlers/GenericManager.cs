@@ -12,6 +12,8 @@ namespace ChilledLeves.Scheduler.Handlers
         internal static TaskManager taskManager = new();
         static TaskManager TaskManager => taskManager;
         private static List<int> SlotsFilled { get; set; } = new();
+        // 已排入佇列、還沒跑完的格子：同一格不重排。佇列空了就清（逾時被丟掉的格子下一幀重排）。
+        private static readonly HashSet<int> SlotsQueued = new();
 
         /// <summary>清掉逐格點選佇列與「已填格」紀錄；所有停止入口都走這一支。只在框架執行緒呼叫。</summary>
         /// <remarks>只清佇列不清紀錄的話，交納視窗開著時停止再開始，殘留的已填格會讓剩下的格子永遠不點。</remarks>
@@ -19,6 +21,7 @@ namespace ChilledLeves.Scheduler.Handlers
         {
             TaskManager.Abort();
             SlotsFilled.Clear();
+            SlotsQueued.Clear();
         }
 
         private static bool? ConfirmOrAbort(AddonRequest* addon)
@@ -107,10 +110,12 @@ namespace ChilledLeves.Scheduler.Handlers
 
                     if (TryGetAddonByName<AddonRequest>("Request", out var addon3))
                     {
+                        if (!TaskManager.IsBusy) SlotsQueued.Clear();
                         for (var i = 1; i <= addon3->EntryCount; i++)
                         {
                             if (SlotsFilled.Contains(addon3->EntryCount)) ConfirmOrAbort(addon3);
                             if (SlotsFilled.Contains(i)) return;
+                            if (!SlotsQueued.Add(i)) continue;
                             var val = i;
                             TaskManager.DelayNext($"ClickTurnin{val}", 10);
                             TaskManager.Enqueue(() => TryClickItem(val));
