@@ -12,6 +12,15 @@ namespace ChilledLeves.Scheduler.Handlers
         internal static TaskManager taskManager = new();
         static TaskManager TaskManager => taskManager;
         private static List<int> SlotsFilled { get; set; } = new();
+
+        /// <summary>清掉逐格點選佇列與「已填格」紀錄；所有停止入口都走這一支。只在框架執行緒呼叫。</summary>
+        /// <remarks>只清佇列不清紀錄的話，交納視窗開著時停止再開始，殘留的已填格會讓剩下的格子永遠不點。</remarks>
+        internal static void Reset()
+        {
+            TaskManager.Abort();
+            SlotsFilled.Clear();
+        }
+
         private static bool? ConfirmOrAbort(AddonRequest* addon)
         {
             // AtkComponentButton.IsEnabled 解的是 OwnerNode(0xA8)，不是 AtkResNode(0xA0)。
@@ -109,8 +118,7 @@ namespace ChilledLeves.Scheduler.Handlers
                     }
                     else
                     {
-                        SlotsFilled.Clear();
-                        TaskManager.Abort();
+                        Reset();
                     }
                 }
             }

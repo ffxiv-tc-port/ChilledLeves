@@ -69,8 +69,8 @@ internal sealed class StopAllIpc : IDisposable
             var disabled = ticking || queued > 0;
             if (disabled)
                 SchedulerMain.DisablePlugin();
-            if (clicks > 0)
-                GenericManager.taskManager.Abort();
+            if (!disabled)
+                GenericManager.Reset();
 
             var nav = disabled ? "，並停下 vnavmesh 導航" : "";
             Svc.Log.Information($"[ChilledLeves] 收到急停（{label}）：已停止理符自動化（原本執行中＝{ticking}、模式＝{mode}、任務佇列 {queued} 項、交納點選佇列 {clicks} 項）{nav}。");

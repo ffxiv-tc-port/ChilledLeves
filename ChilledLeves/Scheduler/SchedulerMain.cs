@@ -35,7 +35,7 @@ namespace ChilledLeves.Scheduler
             P.navmesh.Stop();
             P.taskManager.Abort();
             // 交納視窗逐格點選是另一個自己跑的佇列，不清的話停止後仍會繼續點。
-            Handlers.GenericManager.taskManager.Abort();
+            Handlers.GenericManager.Reset();
             
             foreach (var kpd in ListCycled)
             {
