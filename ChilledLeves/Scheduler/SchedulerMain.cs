@@ -28,12 +28,10 @@ namespace ChilledLeves.Scheduler
             EnableTicking = false;
             GatheringMode = false;
             WorkListMode = false;
-            // 先取消自己送出、可能還在算的尋路，再停路徑；沒送過就不碰別人的尋路。
-            if (TaskMoveTo.IssuedPathfind)
-            {
-                TaskMoveTo.IssuedPathfind = false;
+            // 先取消自己送出、還在算的尋路，再停路徑；全域取消會連別的插件的尋路一起取消，所以只在這時才呼叫。
+            if (TaskMoveTo.IssuedPathfind && P.navmesh.PathfindInProgress())
                 P.navmesh.PathfindCancelAll();
-            }
+            TaskMoveTo.IssuedPathfind = false;
             P.navmesh.Stop();
             P.taskManager.Abort();
             // 交納視窗逐格點選是另一個自己跑的佇列，不清的話停止後仍會繼續點。
