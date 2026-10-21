@@ -374,6 +374,8 @@ public static unsafe class Utils
     public const int CallbackNotListed = -1;
     /// <summary>這一刻一個項目都讀不到（例如清單還沒填好），下一次再讀。</summary>
     public const int CallbackUnreadable = -2;
+    /// <summary>清單裡有兩項以上同名（同名的兩張理符都接了），分不出哪一項是這張。</summary>
+    public const int CallbackAmbiguous = -3;
 
     /// <returns>SelectIconString 的選項索引；比不到一律回負值，呼叫端不可拿負值去按。</returns>
     /// <param name="readEntries">非 null 時收集這次讀到的項目文字，給診斷用。</param>
@@ -383,6 +385,8 @@ public static unsafe class Utils
         var compareInfo = CultureInfo.InvariantCulture.CompareInfo;
         const CompareOptions compareOptions = CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace;
         var readAny = false;
+        var found = -1;
+        var matches = 0;
 
         for (int i = 1; i < 18; i++)
         {
@@ -394,19 +398,62 @@ public static unsafe class Utils
             readEntries?.Add(CurrentText);
             if (!string.IsNullOrEmpty(questName) && compareInfo.Compare(CurrentText, questName, compareOptions) == 0)
             {
-                var callback = i - 1;
-                if (LogGate.VerboseEnabled)
-                    PluginVerbos($"Callback number is: {callback}");
-                return callback;
+                if (matches++ == 0)
+                    found = i - 1;
             }
         }
 
+        // 交納清單只有名稱可比：同名兩項時取第一項可能交錯張，寧可不按。
+        if (matches > 1)
+            return CallbackAmbiguous;
+        if (found >= 0)
+        {
+            if (LogGate.VerboseEnabled)
+                PluginVerbos($"Callback number is: {found}");
+            return found;
+        }
         return readAny ? CallbackNotListed : CallbackUnreadable;
     }
 
     #endregion
 
     #region Leve Utilities
+
+    // LeveDictionary 只增不減 ⇒ 筆數變了才重建索引。下列三個欄位只在框架執行緒碰。
+    private static Dictionary<string, List<LeveNameMatch.Row>>? leveNameIndex;
+    private static int leveNameIndexCount = -1;
+    private static readonly HashSet<string> loggedSharedLeveNames = new();
+
+    private static Dictionary<string, List<LeveNameMatch.Row>> LeveNameIndex
+    {
+        get
+        {
+            if (leveNameIndex == null || leveNameIndexCount != LeveDictionary.Count)
+            {
+                leveNameIndex = LeveNameMatch.BuildIndex(
+                    LeveDictionary.Select(kv => new LeveNameMatch.Row(kv.Key, kv.Value.LeveName, kv.Value.Level)));
+                leveNameIndexCount = LeveDictionary.Count;
+            }
+            return leveNameIndex;
+        }
+    }
+
+    /// <summary>
+    /// 委託人清單上的一列（名稱＋等級文字）對回理符 ID；同名時優先選 <paramref name="npcId"/> 發的、再看等級。
+    /// 回 0＝不是插件認得的理符，或同名分不出（後者每個名稱只記一次 Information）。只在框架執行緒呼叫。
+    /// </summary>
+    public static uint ResolveListedLeveId(string shownName, string? shownLevel, uint npcId)
+    {
+        var vendorIds = npcId != 0 && LeveVendor.TryGetValue(npcId, out var ids) ? ids : null;
+        var id = LeveNameMatch.Pick(LeveNameIndex, shownName, shownLevel, vendorIds, out var matches);
+        if (id == 0 && matches > 1 && loggedSharedLeveNames.Add(shownName))
+            PluginInfo($"[ChilledLeves] 理符「{shownName}」（清單等級「{shownLevel}」）有 {matches} 張同名，分不出是哪一張，這一列不處理。");
+        return id;
+    }
+
+    /// <summary>這個名稱是否有兩張以上的理符共用（只顯示名稱的畫面，例如任務詳情，就分不出是哪一張）。</summary>
+    public static bool IsSharedLeveName(string name)
+        => LeveNameIndex.TryGetValue(name, out var same) && same.Count > 1;
 
     public static void PopulateDictionary()
     {

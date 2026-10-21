@@ -18,6 +18,7 @@ namespace ChilledLeves.Scheduler.Tasks
         internal static void Enqueue(uint leveID, uint npcID, int classButton)
         {
             P.taskManager.Enqueue(() => PluginLog.Information($"Leve Type is: {LeveDictionary[leveID].JobAssignmentType}"), "Log Message");
+            P.taskManager.Enqueue(() => { GuildLeve.LastSelectedLeveId = 0; }, "Reset leve selection");
             TaskInteract.Enqueue(npcID);
             var jobType = LeveDictionary[leveID].JobAssignmentType;
             P.taskManager.Enqueue(() => PluginLog.Information($"Job Type is: {jobType}"), "Log Message");
@@ -89,22 +90,30 @@ namespace ChilledLeves.Scheduler.Tasks
             else if (TryGetAddonMaster<GuildLeve>("GuildLeve", out var m) && m.IsAddonReady)
             {
                 bool hasLeve = false;
+                bool nameOnly = false;
                 var compareInfo = CultureInfo.InvariantCulture.CompareInfo;
                 var compareOptions = CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace;
+                var sharedName = IsSharedLeveName(LeveName);
 
                 foreach (var l in m.Levequests)
                 {
                     if (compareInfo.Compare(l.Name, LeveName, compareOptions) != 0)
                         continue;
+                    if (ResolveListedLeveId(l.Name, l.Level, npcID) != leveID)
+                    {
+                        nameOnly = true;
+                        continue;
+                    }
 
                     hasLeve = true;
                     if (TryGetAddonMaster<AddonMaster.JournalDetail>("JournalDetail", out var det) && det.IsAddonReady)
                     {
                         var currentJournalName = GetNodeText("JournalDetail", 19);
-                        if (compareInfo.Compare(currentJournalName, LeveName, compareOptions) != 0)
+                        if (compareInfo.Compare(currentJournalName, LeveName, compareOptions) != 0
+                            || (sharedName && GuildLeve.LastSelectedLeveId != leveID))
                         {
                             if (EzThrottler.Throttle("Selecting the Leve"))
-                                l.Select();
+                                l.Select(leveID);
                         }
                         else
                         {
@@ -130,7 +139,9 @@ namespace ChilledLeves.Scheduler.Tasks
                         ListCycled.Add(missing);
                         C.workList.Remove(missing);
                     }
-                    PluginLog.Information($"[ChilledLeves] 理符委託人那裡找不到「{LeveName}」（{leveID}），先從工作清單移出這一張，停止時會放回。");
+                    PluginLog.Information(nameOnly
+                        ? $"[ChilledLeves] 理符委託人那裡只有同名的其他理符（或分不出是哪一張），沒有「{LeveName}」（{leveID}），先從工作清單移出這一張，停止時會放回。"
+                        : $"[ChilledLeves] 理符委託人那裡找不到「{LeveName}」（{leveID}），先從工作清單移出這一張，停止時會放回。");
                     return true;
                 }
             }
@@ -162,29 +173,37 @@ namespace ChilledLeves.Scheduler.Tasks
             }
             else if (TryGetAddonMaster<GuildLeve>("GuildLeve", out var m) && m.IsAddonReady)
             {
-                HashSet<string> PotentionalLeves = new HashSet<string>();
+                HashSet<uint> PotentionalLeves = new HashSet<uint>();
+                var entries = m.Levequests;
+                var entryIds = new uint[entries.Length];
 
-                foreach (var l in m.Levequests)
+                for (var i = 0; i < entries.Length; i++)
                 {
-                    PotentionalLeves.Add(l.Name);
+                    var l = entries[i];
+                    entryIds[i] = ResolveListedLeveId(l.Name, l.Level, npcID);
+                    if (entryIds[i] != 0)
+                        PotentionalLeves.Add(entryIds[i]);
                     if (LogGate.DebugEnabled)
-                        PluginDebug($"Potentional Leves: {l.Name}");
+                        PluginDebug($"Potentional Leves: {l.Name} [{entryIds[i]}]");
                 }
 
                 string? firstLeve = GetFirstLeve(PotentionalLeves);
 
                 if (firstLeve != null)
                 {
-                    foreach (var l in m.Levequests)
+                    var sharedName = IsSharedLeveName(firstLeve);
+                    for (var i = 0; i < entries.Length; i++)
                     {
-                        if (l.Name == firstLeve)
+                        var l = entries[i];
+                        if (entryIds[i] == FishLeve)
                         {
                             if (TryGetAddonMaster<AddonMaster.JournalDetail>("JournalDetail", out var det) && det.IsAddonReady)
                             {
-                                if (GetNodeText("JournalDetail", 19) != firstLeve)
+                                if (GetNodeText("JournalDetail", 19) != firstLeve
+                                    || (sharedName && GuildLeve.LastSelectedLeveId != FishLeve))
                                 {
                                     if (EzThrottler.Throttle("Selecting the Leve"))
-                                        l.Select();
+                                        l.Select(FishLeve);
                                 }
                                 else if (GetNodeText("JournalDetail", 19) == firstLeve)
                                 {
@@ -238,10 +257,10 @@ namespace ChilledLeves.Scheduler.Tasks
             return false;
         }
 
-        private static string? GetFirstLeve(HashSet<string> PotentionalLeves)
+        private static string? GetFirstLeve(HashSet<uint> PotentionalLeves)
         {
             var leve = LeveDictionary
-                        .Where(kvp => PotentionalLeves.Contains(kvp.Value.LeveName) && (CraftDictionary[kvp.Key].TurninAmount <= CraftDictionary[kvp.Key].CurrentItemAmount))
+                        .Where(kvp => PotentionalLeves.Contains(kvp.Key) && (CraftDictionary[kvp.Key].TurninAmount <= CraftDictionary[kvp.Key].CurrentItemAmount))
                         .FirstOrDefault();
 
             if (!LeveDictionary.ContainsKey(leve.Key))

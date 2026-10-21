@@ -20,6 +20,7 @@ namespace ChilledLeves.Scheduler.Tasks
 
         internal static void Enqueue(uint npcID, int classButton)
         {
+            P.taskManager.Enqueue(() => { GuildLeve.LastSelectedLeveId = 0; }, "Reset leve selection");
             TaskInteract.Enqueue(npcID);
             P.taskManager.Enqueue(() => UpdateViableLeves(), "updating Viable Leves");
             P.taskManager.Enqueue(() => GrabLeveMulti(npcID, classButton), "Grabbing multiple leves", DConfig);
@@ -78,8 +79,11 @@ namespace ChilledLeves.Scheduler.Tasks
                 {
                     var compareInfo = CultureInfo.InvariantCulture.CompareInfo;
                     var compareOptions = CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace;
-                    var leveMatch = ViableLeves.FirstOrDefault(v =>
-                        compareInfo.Compare(v.Value, l.Name, CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace) == 0);
+                    // 先把這一列對回理符 ID 再查工作清單：同名理符不能只靠名稱挑工作清單裡的第一張。
+                    var listedId = ResolveListedLeveId(l.Name, l.Level, npcID);
+                    var leveMatch = listedId != 0 && ViableLeves.TryGetValue(listedId, out var viableName)
+                        ? new KeyValuePair<uint, string>(listedId, viableName)
+                        : default;
 
                     if (!leveMatch.Equals(default(KeyValuePair<uint, string>))) // If a match is found/that it didn't find one, and you haven't accepted the quest yet
                     {
@@ -104,11 +108,12 @@ namespace ChilledLeves.Scheduler.Tasks
                             if (TryGetAddonMaster<AddonMaster.JournalDetail>("JournalDetail", out var det) && det.IsAddonReady)
                             {
                                 var currentJournalName = GetNodeText("JournalDetail", 19);
-                                if (compareInfo.Compare(currentJournalName, leveName, compareOptions) != 0)
+                                if (compareInfo.Compare(currentJournalName, leveName, compareOptions) != 0
+                                    || (IsSharedLeveName(leveName) && GuildLeve.LastSelectedLeveId != leveId))
                                 {
                                     if (EzThrottler.Throttle("Selecting the Leve"))
                                     {
-                                        l.Select();
+                                        l.Select(leveId);
                                         PluginVerbos($"Selecting leve: {leveName}");
                                     }
                                 }

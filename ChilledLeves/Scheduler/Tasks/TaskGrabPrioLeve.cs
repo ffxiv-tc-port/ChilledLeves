@@ -18,6 +18,7 @@ namespace ChilledLeves.Scheduler.Tasks
         internal static void Enqueue(uint npcID, int classButton)
         {
             P.taskManager.Enqueue(() => UpdateItemAmounts(), "Updating Item Count");
+            P.taskManager.Enqueue(() => { GuildLeve.LastSelectedLeveId = 0; }, "Reset leve selection");
             TaskInteract.Enqueue(npcID);
             P.taskManager.Enqueue(() => GrabLeve(npcID, classButton), "Grabbing Leve from NPC", DConfig);
             P.taskManager.Enqueue(() => LeaveLeveVendor(npcID), "Leaving the Leve NPC", DConfig);
@@ -57,13 +58,18 @@ namespace ChilledLeves.Scheduler.Tasks
             }
             else if (TryGetAddonMaster<GuildLeve>("GuildLeve", out var m) && m.IsAddonReady)
             {
-                HashSet<string> PotentionalLeves = new HashSet<string>();
+                HashSet<uint> PotentionalLeves = new HashSet<uint>();
+                var entries = m.Levequests;
+                var entryIds = new uint[entries.Length];
 
-                foreach (var l in m.Levequests)
+                for (var i = 0; i < entries.Length; i++)
                 {
-                    PotentionalLeves.Add(l.Name);
+                    var l = entries[i];
+                    entryIds[i] = ResolveListedLeveId(l.Name, l.Level, npcID);
+                    if (entryIds[i] != 0)
+                        PotentionalLeves.Add(entryIds[i]);
                     if (LogGate.DebugEnabled)
-                        PluginDebug($"Potentional Leves: {l.Name}");
+                        PluginDebug($"Potentional Leves: {l.Name} [{entryIds[i]}]");
                 }
 
                 string? prioLeve = GetLowestPriorityLeveName(PotentionalLeves);
@@ -72,16 +78,19 @@ namespace ChilledLeves.Scheduler.Tasks
 
                 if (prioLeve != null)
                 {
-                    foreach (var l in m.Levequests)
+                    var sharedName = IsSharedLeveName(prioLeve);
+                    for (var i = 0; i < entries.Length; i++)
                     {
-                        if (l.Name == prioLeve)
+                        var l = entries[i];
+                        if (entryIds[i] == leveId)
                         {
                             if (TryGetAddonMaster<AddonMaster.JournalDetail>("JournalDetail", out var det) && det.IsAddonReady)
                             {
-                                if (GetNodeText("JournalDetail", 19) != prioLeve)
+                                if (GetNodeText("JournalDetail", 19) != prioLeve
+                                    || (sharedName && GuildLeve.LastSelectedLeveId != leveId))
                                 {
                                     if (EzThrottler.Throttle("Selecting the Leve"))
-                                        l.Select();
+                                        l.Select(leveId);
                                 }
                                 else if (GetNodeText("JournalDetail", 19) == prioLeve)
                                 {
@@ -154,10 +163,10 @@ namespace ChilledLeves.Scheduler.Tasks
             return false;
         }
 
-        private static string? GetLowestPriorityLeveName(HashSet<string> leveNames)
+        private static string? GetLowestPriorityLeveName(HashSet<uint> listedLeveIds)
         {
             var leve = LeveDictionary
-                        .Where(kvp => leveNames.Contains(kvp.Value.LeveName) && (CraftDictionary[kvp.Key].TurninAmount <= CraftDictionary[kvp.Key].CurrentItemAmount)) // Filter by HashSet and check the TurninAmount
+                        .Where(kvp => listedLeveIds.Contains(kvp.Key) && (CraftDictionary[kvp.Key].TurninAmount <= CraftDictionary[kvp.Key].CurrentItemAmount)) // Filter by HashSet and check the TurninAmount
                         .OrderBy(kvp => kvp.Value.Priority) // Sort by Priority
                         .FirstOrDefault(); // Get the first (lowest priority) or null if none found
 

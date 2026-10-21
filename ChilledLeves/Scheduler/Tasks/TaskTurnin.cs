@@ -47,6 +47,16 @@ namespace ChilledLeves.Scheduler.Tasks
             SchedulerMain.DisablePlugin();
         }
 
+        private static void StopAmbiguous(string questName)
+        {
+            notListedSinceMs = 0;
+            var seen = new List<string>();
+            GetCallback(questName, seen);
+            Svc.Log.Information($"[ChilledLeves] 交納清單裡有不只一項名為「{questName}」的理符，分不出是哪一張，未選擇任何項目，已停止理符自動化。清單內容：{string.Join("／", seen)}");
+            Svc.Chat.Print("[Chilled Leves] More than one leve in the hand-in list is named \"??\", so nothing was selected and the leve run was stopped. Hand in the right one yourself, then press Start again.".Loc(questName));
+            SchedulerMain.DisablePlugin();
+        }
+
         internal static unsafe void Enqueue(string QuestName, uint leveID)
         {
             P.taskManager.Enqueue(() => Turnin(QuestName, leveID), "Turning in Leve", configuration: DConfig);
@@ -81,6 +91,10 @@ namespace ChilledLeves.Scheduler.Tasks
                         lastUnreadableLogMs = now;
                         Svc.Log.Information($"[ChilledLeves] 交納清單暫時讀不到任何項目，未選擇，稍後再讀（理符「{QuestName}」）。");
                     }
+                }
+                else if (callback == CallbackAmbiguous)
+                {
+                    StopAmbiguous(QuestName);
                 }
                 else if (NotListedConfirmed(QuestName))
                 {

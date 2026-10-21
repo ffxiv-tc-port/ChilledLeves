@@ -97,21 +97,38 @@ public unsafe class GuildLeve : AddonMasterBase<AddonGuildLeve>
 
     public override string AddonDescription { get; }
 
+    /// <summary>
+    /// 插件最後一次在委託人清單按「選取」時指定的理符 ID；0＝這次開清單後還沒選過。
+    /// 任務詳情只顯示名稱，同名理符要靠它判斷詳情裡是不是自己選的那張。只在框架執行緒碰。
+    /// </summary>
+    public static uint LastSelectedLeveId { get; set; }
+
     public class Levequest(GuildLeve master, int index)
     {
         public string Name;
         public string? Level;
 
+        /// <summary>只有名稱時的退路（除錯視窗用）：同名多張時看等級，挑不出唯一就不按。</summary>
         public void Select()
         {
-            var quest = Svc.Data.GetExcelSheet<Leve>().FirstOrNull(x => x.Name.GetText() == Name);
-            if (quest == null)
-            {
+            var sameName = Svc.Data.GetExcelSheet<Leve>()
+                .Where(x => x.Name.GetText() == Name)
+                .Select(x => new LeveNameMatch.Row(x.RowId, Name, x.ClassJobLevel))
+                .ToList();
+            var rowId = LeveNameMatch.Pick(sameName, Level, null);
+            if (sameName.Count == 0)
                 PluginLog.Error($"Failed to select levequest, requested name not found: {Name}");
-            }
+            else if (rowId == 0)
+                PluginLog.Information($"[ChilledLeves] 理符「{Name}」（清單等級「{Level}」）有 {sameName.Count} 張同名，分不出是哪一張，未選取。");
             else
+                Select(rowId);
+        }
+
+        /// <param name="leveId">呼叫端已經確定的理符 ID；不從名稱反查，同名理符才不會選錯張。</param>
+        public void Select(uint leveId)
+        {
             {
-                var rowId = (int)quest?.RowId;
+                var rowId = (int)leveId;
 
                 // 🔴 這條 Callback.Fire 不經 GenericHandlers.FireCallback，要自己過同一道閘門，
                 //    否則對「正在關閉中」的理符清單再送一發就是攔不到的原生存取違規。
@@ -124,6 +141,7 @@ public unsafe class GuildLeve : AddonMasterBase<AddonGuildLeve>
                     return;
 
                 Callback.Fire(master.Base, true, 13, index, rowId);
+                LastSelectedLeveId = leveId;
             }
         }
     }
