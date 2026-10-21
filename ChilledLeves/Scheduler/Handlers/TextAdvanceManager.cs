@@ -15,7 +15,9 @@ namespace ChilledLeves.Scheduler.Handlers
     {
         private static bool WasChanged = false;
         private static bool ReAddLogged = false;
-        private static DateTime AddedInFrame = DateTime.MaxValue;
+        private const string StopRequestsKey = "TextAdvance.StopRequests";
+        /// <summary>名字最近一次加進名單的幀（<see cref="AddonPressGuard.FrameCount"/>）。</summary>
+        private static long AddedFrame;
         internal static void Tick()
         {
             if (WasChanged)
@@ -39,19 +41,31 @@ namespace ChilledLeves.Scheduler.Handlers
                     WasChanged = true;
                     ReAddLogged = false;
                     LockTA();
-                    AddedInFrame = Svc.Framework.LastUpdateUTC;
+                    AddedFrame = AddonPressGuard.FrameCount;
                     PluginDebug($"TextAdvance locked");
                 }
             }
         }
 
-        /// <summary>沒在暫停＝true；暫停中則要等名字在名單上滿一整幀（TextAdvance 同一幀稍早可能已經按過）。</summary>
-        internal static bool MayClickTalk => !WasChanged || Svc.Framework.LastUpdateUTC > AddedInFrame;
+        /// <summary>沒在暫停＝true。暫停中：名單在、名字卻不在＝false（這一幀稍後 <see cref="Tick"/> 會補回）；
+        /// 補回之後要隔滿一整幀才放行（補回那一幀 TextAdvance 可能已經按過，下一幀它才一定看得到名字）。</summary>
+        /// <remarks>名字要在點擊當下查：本插件的任務佇列比 <see cref="Tick"/> 早跑，只靠 Tick 補回會晚一幀才知道名字掉了。</remarks>
+        internal static bool MayClickTalk
+        {
+            get
+            {
+                if (!WasChanged) return true;
+                if (EzSharedData.TryGet<HashSet<string>>(StopRequestsKey, out var data) && !data.Contains(P.Name)) return false;
+                // 時鐘沒跑的話這裡永遠不放行（TryBeginPress 同一個理由）。
+                AddonPressGuard.EnsureClockRunning();
+                return AddonPressGuard.FrameCount > AddedFrame + 1;
+            }
+        }
 
         /// <returns>這一次真的把名字加進去了（原本不在名單上）。</returns>
         internal static bool LockTA()
         {
-            if (!EzSharedData.TryGet<HashSet<string>>("TextAdvance.StopRequests", out var data))
+            if (!EzSharedData.TryGet<HashSet<string>>(StopRequestsKey, out var data))
                 return false;
             try
             {
@@ -62,13 +76,13 @@ namespace ChilledLeves.Scheduler.Handlers
             {
                 return false;
             }
-            AddedInFrame = Svc.Framework.LastUpdateUTC;
+            AddedFrame = AddonPressGuard.FrameCount;
             return true;
         }
 
         internal static void UnlockTA()
         {
-            if (EzSharedData.TryGet<HashSet<string>>("TextAdvance.StopRequests", out var data))
+            if (EzSharedData.TryGet<HashSet<string>>(StopRequestsKey, out var data))
             {
                 data.Remove(P.Name);
             }

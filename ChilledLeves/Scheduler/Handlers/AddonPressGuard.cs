@@ -131,6 +131,9 @@ namespace ChilledLeves.Scheduler.Handlers
         /// </remarks>
         private static long frameCount;
 
+        /// <summary>同一個幀時鐘給別的閘門用（建構子就訂閱，同一幀裡比任務佇列與主 Tick 都先遞增）。只在主執行緒讀。</summary>
+        internal static long FrameCount => frameCount;
+
         /// <summary>0 ＝時鐘還沒訂閱、1 ＝已訂閱。</summary>
         /// <remarks>用 <see cref="Interlocked"/>：重複訂閱會讓一個 tick 前進 2 幀 ＝ 所有逃生口對半砍。</remarks>
         private static int clockSubscribed;
