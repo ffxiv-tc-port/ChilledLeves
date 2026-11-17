@@ -608,7 +608,7 @@ namespace ChilledLeves.Ui
                 {
                     if (ImGui.Button("Stop".Loc(), new Vector2(gatherBtnWidth / 2, navButtonHeight)))
                     {
-                        SchedulerMain.DisablePlugin();
+                        SchedulerMain.StopByUser();
                     }
                 }
 
@@ -694,7 +694,7 @@ namespace ChilledLeves.Ui
                 {
                     if (ImGui.Button("Stop".Loc(), new Vector2(gatherBtnWidth / 2, navButtonHeight)))
                     {
-                        SchedulerMain.DisablePlugin();
+                        SchedulerMain.StopByUser();
                     }
                 }
                 if (ImGui.Button("Main Window".Loc(), new Vector2(mainBtnWidth, navButtonHeight)))

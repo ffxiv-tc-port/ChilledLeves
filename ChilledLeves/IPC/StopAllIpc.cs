@@ -7,7 +7,7 @@ namespace ChilledLeves.IPC;
 
 /// <summary>急停端點 <c>ChilledLeves.StopAll</c>（Action&lt;string&gt;，參數是呼叫端署名，寫進記錄）。</summary>
 /// <remarks>任何執行緒都可以呼叫、不會擲例外給呼叫端：在 framework 執行緒上當場停；其他執行緒只排隊，下一幀由 <see cref="ProcessPending"/> 停。
-/// 停止走與「停止」按鈕、<c>/chilledleves stop</c> 相同的 <see cref="SchedulerMain.DisablePlugin"/>，不改、不存設定。
+/// 停止走與「停止」按鈕、<c>/chilledleves stop</c> 相同的 <see cref="SchedulerMain.StopByUser"/>（全域停 vnavmesh 路徑），不改、不存設定。
 /// 刻意只提供停止、不提供開始：開始一律要使用者自己按。</remarks>
 internal sealed class StopAllIpc : IDisposable
 {
@@ -56,7 +56,7 @@ internal sealed class StopAllIpc : IDisposable
             var ticking = SchedulerMain.AreWeTicking;
             var mode = SchedulerMain.WorkListMode ? "工作清單" : SchedulerMain.GatheringMode ? "採集模式" : "無";
             var queued = P.taskManager?.NumQueuedTasks ?? 0;
-            // 交納視窗逐格點選用的是另一個佇列：DisablePlugin 也會清，但沒在跑時不呼叫它，所以下面另外清。
+            // 交納視窗逐格點選用的是另一個佇列：StopByUser 也會清，但沒在跑時不呼叫它，所以下面另外清。
             var clicks = GenericManager.taskManager.NumQueuedTasks;
 
             if (!ticking && queued == 0 && clicks == 0)
@@ -65,10 +65,10 @@ internal sealed class StopAllIpc : IDisposable
                 return;
             }
 
-            // 沒在跑時不呼叫 DisablePlugin：它會無條件停 vnavmesh，那時的導航是別人的。
+            // 沒在跑時不呼叫 StopByUser：它會無條件停 vnavmesh，那時的導航是別人的。
             var disabled = ticking || queued > 0;
             if (disabled)
-                SchedulerMain.DisablePlugin();
+                SchedulerMain.StopByUser();
             if (!disabled)
                 GenericManager.Reset();
 

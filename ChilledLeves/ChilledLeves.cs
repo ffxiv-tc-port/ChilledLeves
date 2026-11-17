@@ -98,6 +98,8 @@ public sealed class ChilledLeves : IDalamudPlugin
 
     private void Tick(object _)
     {
+        // 放在玩家判斷外面：跨區時自己的路線照樣會結束，要看到才放手。
+        navmesh.ObserveOwn();
         stopAllIpc?.ProcessPending();
         Scheduler.Handlers.StepTimeoutStop.ProcessPending();
         if (SchedulerMain.AreWeTicking && Svc.Objects.LocalPlayer != null)
@@ -209,7 +211,7 @@ public sealed class ChilledLeves : IDalamudPlugin
         }
         else if (firstArg.ToLower() == "stop")
         {
-            SchedulerMain.DisablePlugin();
+            SchedulerMain.StopByUser();
             PluginVerbos("Sopping the turnin process");
             return;
         }

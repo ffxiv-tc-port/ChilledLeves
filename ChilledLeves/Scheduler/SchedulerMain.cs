@@ -23,16 +23,40 @@ namespace ChilledLeves.Scheduler
             EnableTicking = true;
             return true;
         }
-        internal static bool DisablePlugin()
+        /// <summary>使用者按下的停止（停止鈕、<c>/chilledleves stop</c>、<c>ChilledLeves.StopAll</c> 急停）：照舊全域停 vnavmesh 路徑。</summary>
+        internal static bool StopByUser()
         {
-            EnableTicking = false;
-            GatheringMode = false;
-            WorkListMode = false;
+            EndRunFlags();
             // 先取消自己送出、還在算的尋路，再停路徑；全域取消會連別的插件的尋路一起取消，所以只在這時才呼叫。
             if (TaskMoveTo.IssuedPathfind && P.navmesh.PathfindInProgress())
                 P.navmesh.PathfindCancelAll();
             TaskMoveTo.IssuedPathfind = false;
             P.navmesh.Stop();
+            EndRunQueues();
+            return true;
+        }
+
+        /// <summary>流程自己停手（清單做完、沒額度、等級到、步驟逾時、交納清單對不上）：只停 ChilledLeves 自己送的移動。</summary>
+        internal static bool StopBySelf()
+        {
+            EndRunFlags();
+            TaskMoveTo.IssuedPathfind = false;
+            var r = P.navmesh.StopOwn();
+            if (r.HadIssued)
+                Svc.Log.Information($"[ChilledLeves] 理符自動化自己停止，只停自己的移動：{r.Why}（取消算路={r.CancelledPathfind}、停止路徑={r.StoppedPath}）");
+            EndRunQueues();
+            return true;
+        }
+
+        private static void EndRunFlags()
+        {
+            EnableTicking = false;
+            GatheringMode = false;
+            WorkListMode = false;
+        }
+
+        private static void EndRunQueues()
+        {
             P.taskManager.Abort();
             // 交納視窗逐格點選是另一個自己跑的佇列，不清的話停止後仍會繼續點。
             Handlers.GenericManager.Reset();
@@ -53,7 +77,6 @@ namespace ChilledLeves.Scheduler
             }
 
             ListCycled.Clear();
-            return true;
         }
 
         internal static string CurrentProcess = "";
@@ -289,7 +312,7 @@ namespace ChilledLeves.Scheduler
                                     else if (Allowances == 0)
                                     {
                                         PluginVerbos("Somehow, you got here??? Not sure how but. Disabling the plugin");
-                                        DisablePlugin();
+                                        StopBySelf();
                                     }
                                 }
                             }
@@ -303,7 +326,7 @@ namespace ChilledLeves.Scheduler
                                 {
                                     PluginVerbos("You have completed your list, stopping the plugin");
                                 }
-                                DisablePlugin();
+                                StopBySelf();
                             }
                         }
                         else if (GatheringMode)
@@ -322,14 +345,14 @@ namespace ChilledLeves.Scheduler
                                 string ChatText = "You have hit the level set, stopping the farming process";
                                 PluginVerbos(ChatText);
                                 Svc.Chat.Print(ChatText.Loc());
-                                DisablePlugin();
+                                StopBySelf();
                             }
                             else if (C.RunUntilSelected == "All Leves Complete" && AllCompleted())
                             {
                                 string ChatText = "All leves have been completed on for this class, topping the process";
                                 PluginVerbos(ChatText);
                                 Svc.Chat.Print(ChatText.Loc());
-                                DisablePlugin();
+                                StopBySelf();
                             }
                             else
                             {
@@ -451,7 +474,7 @@ namespace ChilledLeves.Scheduler
                                 else
                                 {
                                     PluginVerbos("Stopping the plugin, no potentional leves");
-                                    SchedulerMain.DisablePlugin();
+                                    SchedulerMain.StopBySelf();
                                 }
                             }
                         }

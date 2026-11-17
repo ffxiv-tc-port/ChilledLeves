@@ -132,7 +132,7 @@ namespace ChilledLeves.Scheduler.Tasks
                     PluginVerbos($"2: It's a gathering leve and the vendor doesn't have this leve currently.");
                     PluginVerbos($"In the case of #2, please do other gathering leves of this type to be able to do this leve potentionally");
 
-                    // 移出的是找不到的那一張，不是清單第一項；停止時 DisablePlugin 會從 ListCycled 放回去。
+                    // 移出的是找不到的那一張，不是清單第一項；停止時 StopByUser／StopBySelf 會從 ListCycled 放回去。
                     var missing = C.workList.FirstOrDefault(e => e.LeveID == leveID);
                     if (missing != null)
                     {

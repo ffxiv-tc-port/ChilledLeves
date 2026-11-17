@@ -413,7 +413,7 @@ internal class GatherModeUi : Window
         {
             if (ImGui.Button("Stop Gathering Leves".Loc(), new Vector2(ImGui.GetContentRegionAvail().X, buttonHeight)))
             {
-                SchedulerMain.DisablePlugin();
+                SchedulerMain.StopByUser();
             }
         }
     }

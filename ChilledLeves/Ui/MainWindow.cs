@@ -199,7 +199,7 @@ namespace ChilledLeves.Ui
                 {
                     if (ImGui.Button("Stop".Loc(), new Vector2(ImGui.GetContentRegionAvail().X, textLineHeight * 1.5f)))
                     {
-                        SchedulerMain.DisablePlugin();
+                        SchedulerMain.StopByUser();
                     }
                 }
 

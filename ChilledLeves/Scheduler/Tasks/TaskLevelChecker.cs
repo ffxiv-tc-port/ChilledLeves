@@ -20,7 +20,7 @@ namespace ChilledLeves.Scheduler.Tasks
                 string errorMessage = "You're not the proper level to do this leve, stopping";
                 Svc.Toasts.ShowError(errorMessage.Loc());
                 PluginVerbos(errorMessage);
-                SchedulerMain.DisablePlugin();
+                SchedulerMain.StopBySelf();
             }
             return false;
         }
