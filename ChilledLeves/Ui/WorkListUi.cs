@@ -1,5 +1,6 @@
 ﻿using ChilledLeves.Scheduler;
 using Dalamud.Interface.Utility.Raii;
+using Dalamud.Utility;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -171,14 +172,14 @@ namespace ChilledLeves.Ui
                 if (!_isNewList && !string.IsNullOrEmpty(_currentWorklistFile) &&
                     Path.GetFileNameWithoutExtension(_currentWorklistFile).StartsWith(name))
                 {
-                    File.WriteAllText(_currentWorklistFile, json);
+                    FilesystemUtil.WriteAllTextSafe(_currentWorklistFile, json);
                 }
                 else // Otherwise create a new file
                 {
                     string filename = $"{name}_{DateTime.Now:yyyyMMdd_HHmmss}.json";
                     string filePath = Path.Combine(WorklistDirectory, filename);
 
-                    File.WriteAllText(filePath, json);
+                    FilesystemUtil.WriteAllTextSafe(filePath, json);
 
                     // Update tracking for the current file
                     _currentWorklistFile = filePath;
@@ -442,7 +443,7 @@ namespace ChilledLeves.Ui
                 string json = JsonSerializer.Serialize(savedWorklists, options);
                 
                 string filePath = Path.Combine(WorklistDirectory, "saved_worklists.json");
-                File.WriteAllText(filePath, json);
+                FilesystemUtil.WriteAllTextSafe(filePath, json);
             }
             catch (Exception ex)
             {
