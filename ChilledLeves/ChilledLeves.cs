@@ -118,6 +118,8 @@ public sealed class ChilledLeves : IDalamudPlugin
         Safe(() => stopAllIpc?.Dispose());
         Safe(() => Svc.Framework.Update -= Tick);
         Safe(() => Svc.PluginInterface.UiBuilder.Draw -= windowSystem.Draw);
+        // 卸載時只停自己送的移動（UNLOAD-OWNMOVE）：沒送過＝零 IPC。要在退 Tick 之後、ECommonsMain.Dispose 之前。
+        Safe(StopOwnMoveOnUnload);
         // 拆掉 AddonPressGuard 掛在 AddonLifecycle 上的解除封鎖監聽器，
         // 不留任何指向本組件的委派（否則熱重載後仍會被叫到）。
         Safe(Scheduler.Handlers.AddonPressGuard.ForceTeardown);
@@ -128,6 +130,14 @@ public sealed class ChilledLeves : IDalamudPlugin
         Safe(TextAdvancedManager.UnlockTA);
         Safe(YesAlreadyManager.Unlock);
         ECommonsMain.Dispose();
+    }
+
+    private void StopOwnMoveOnUnload()
+    {
+        if (navmesh == null) return;
+        var r = navmesh.StopOwn();
+        if (r.HadIssued)
+            Svc.Log.Information($"[ChilledLeves] 卸載時只停自己的移動：{r.Why}（取消算路={r.CancelledPathfind}、停止路徑={r.StoppedPath}）");
     }
 
     private void OnCommand(string command, string args)
