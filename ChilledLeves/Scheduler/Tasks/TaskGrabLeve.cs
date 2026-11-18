@@ -77,7 +77,7 @@ namespace ChilledLeves.Scheduler.Tasks
             {
                 if (EzThrottler.Throttle("Opening the Levequests Window", 100))
                 {
-                    GenericHandlers.FireCallback("SelectString", true, classButton);
+                    GenericHandlers.FireNpcMenu(npcID, "理符類別", classButton);
                 }
             }
             else if (TryGetAddonByName<AtkUnitBase>("SelectYesno", out var SelectYesno) && IsAddonReady(SelectYesno))
@@ -168,7 +168,7 @@ namespace ChilledLeves.Scheduler.Tasks
             {
                 if (EzThrottler.Throttle("Opening the Levequests Window", 100))
                 {
-                    GenericHandlers.FireCallback("SelectString", true, classButton);
+                    GenericHandlers.FireNpcMenu(npcID, "理符類別", classButton);
                 }
             }
             else if (TryGetAddonMaster<GuildLeve>("GuildLeve", out var m) && m.IsAddonReady)
@@ -232,7 +232,7 @@ namespace ChilledLeves.Scheduler.Tasks
             {
                 if (EzThrottler.Throttle("Leaving Leve Person", 500))
                 {
-                    GenericHandlers.FireCallback("SelectString", true, leaveButton);
+                    GenericHandlers.FireNpcMenu(npcID, "離開", leaveButton);
                 }
             }
             else if (TryGetAddonByName<AtkUnitBase>("GuildLeve", out var GuildLeve) && IsAddonReady(GuildLeve))

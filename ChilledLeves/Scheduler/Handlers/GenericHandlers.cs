@@ -1,4 +1,5 @@
 ﻿using ECommons.Automation;
+using ECommons.UIHelpers.AddonMasterImplementations;
 using ECommons.Throttlers;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using Callback = ECommons.Automation.Callback;
@@ -39,6 +40,37 @@ namespace ChilledLeves.Scheduler.Handlers
                 return true;
             }
             return false;
+        }
+
+        private static readonly System.Collections.Generic.HashSet<(uint Npc, string Button, int Index, string Text)> loggedNpcMenuPresses = [];
+
+        /// <summary>
+        /// 按理符委託人選單（SelectString）的寫死索引：點選照舊走 <see cref="FireCallback"/>，只在按下前讀當下那一格的文字，
+        /// 真的送出才記一行 Information（同 NPC／按鈕／索引／文字只記一次），讓 log 能對帳 Data.cs 的按鈕索引。
+        /// 只在框架執行緒、當下這一幀讀，不保存任何原生指標。
+        /// </summary>
+        internal static unsafe bool? FireNpcMenu(uint npcId, string button, int index)
+        {
+            var text = "?";
+            var count = -1;
+            // 讀文字失敗不能擋住點選：例外只換成標記文字。
+            try
+            {
+                if (TryGetAddonByName<AtkUnitBase>("SelectString", out var addon) && IsAddonReady(addon))
+                {
+                    var menu = new AddonMaster.SelectString(addon);
+                    count = menu.EntryCount;
+                    text = index >= 0 && index < count ? menu.Entries[index].Text : "（索引超出選項範圍）";
+                }
+            }
+            catch (Exception e)
+            {
+                text = $"（讀取失敗：{e.GetType().Name}）";
+            }
+            var fired = FireCallback("SelectString", true, index);
+            if (fired == true && loggedNpcMenuPresses.Add((npcId, button, index, text)))
+                Svc.Log.Information($"[ChilledLeves] 理符委託人選單：NPC {npcId} 按「{button}」索引 {index}（共 {count} 項）＝「{text}」");
+            return fired;
         }
     }
 }
