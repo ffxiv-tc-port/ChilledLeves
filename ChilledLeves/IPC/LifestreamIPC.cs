@@ -22,6 +22,6 @@ namespace ChilledLeves.IPC
         [EzIPC] public Func<bool> TeleportToFC;
         [EzIPC] public Func<bool> TeleportToApartment;
         [EzIPC] public Func<bool> IsBusy;
-        [EzIPC] public Action<string> ExecuteCommand;
+        // 刻意不宣告 ExecuteCommand：等同 /li <參數>，空參數＝跨世界傳送；要傳送用上面的具名端點。
     }
 }
