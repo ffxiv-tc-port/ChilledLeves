@@ -272,13 +272,13 @@ internal class GatherModeUi : Window
                 if (ImGui.BeginTable($"Crafting Workshop List", 8, ImGuiTableFlags.RowBg | ImGuiTableFlags.Reorderable | ImGuiTableFlags.Borders | ImGuiTableFlags.Resizable | ImGuiTableFlags.SizingFixedFit))
                 {
                     // Columns for the crafters
-                    ImGui.TableSetupColumn("Prio".Loc() + "###GatheringLevePrio", ImGuiTableColumnFlags.WidthFixed, 50);
-                    ImGui.TableSetupColumn("Complete?".Loc() + "###GatheringLeveComplete", ImGuiTableColumnFlags.WidthFixed, 100);
-                    ImGui.TableSetupColumn("Level".Loc() + "###GatheringLeveLevel", ImGuiTableColumnFlags.WidthFixed, 50);
-                    ImGui.TableSetupColumn("Leve Name".Loc() + "###GatheringLeveName", ImGuiTableColumnFlags.WidthFixed, 100);
-                    ImGui.TableSetupColumn("Item Turnin".Loc() + "###GatheringTurninItems", ImGuiTableColumnFlags.WidthFixed, 100);
-                    ImGui.TableSetupColumn("Need".Loc() + "###GatheringAmountNecessary", ImGuiTableColumnFlags.WidthFixed, 50);
-                    ImGui.TableSetupColumn("Have".Loc() + "###GatheringCompleteCheck", ImGuiTableColumnFlags.WidthFixed, 100);
+                    ImGui.TableSetupColumn("Prio".Loc() + "###GatheringLevePrio", ImGuiTableColumnFlags.WidthFixed, 50f.Scale());
+                    ImGui.TableSetupColumn("Complete?".Loc() + "###GatheringLeveComplete", ImGuiTableColumnFlags.WidthFixed, 100f.Scale());
+                    ImGui.TableSetupColumn("Level".Loc() + "###GatheringLeveLevel", ImGuiTableColumnFlags.WidthFixed, 50f.Scale());
+                    ImGui.TableSetupColumn("Leve Name".Loc() + "###GatheringLeveName", ImGuiTableColumnFlags.WidthStretch);
+                    ImGui.TableSetupColumn("Item Turnin".Loc() + "###GatheringTurninItems", ImGuiTableColumnFlags.WidthFixed, 100f.Scale());
+                    ImGui.TableSetupColumn("Need".Loc() + "###GatheringAmountNecessary", ImGuiTableColumnFlags.WidthFixed, 50f.Scale());
+                    ImGui.TableSetupColumn("Have".Loc() + "###GatheringCompleteCheck", ImGuiTableColumnFlags.WidthFixed, 100f.Scale());
                     ImGui.TableSetupColumn("Triple?".Loc() + "###GatheringTripleTurnin");
                     
                     ImGui.TableHeadersRow();
@@ -293,13 +293,13 @@ internal class GatherModeUi : Window
                 if (ImGui.BeginTable($"Crafting Workshop List", 8, ImGuiTableFlags.RowBg | ImGuiTableFlags.Reorderable | ImGuiTableFlags.Borders | ImGuiTableFlags.Resizable | ImGuiTableFlags.SizingFixedFit))
                 {
                     // Columns for the crafters
-                    ImGui.TableSetupColumn("Prio".Loc() + "###GatheringLevePrio", ImGuiTableColumnFlags.WidthFixed, 50);
-                    ImGui.TableSetupColumn("Complete?".Loc() + "###GatheringLeveComplete", ImGuiTableColumnFlags.WidthFixed, 100);
-                    ImGui.TableSetupColumn("Level".Loc() + "###GatheringLeveLevel", ImGuiTableColumnFlags.WidthFixed, 50);
-                    ImGui.TableSetupColumn("Leve Name".Loc() + "###GatheringLeveName", ImGuiTableColumnFlags.WidthFixed, 100);
-                    ImGui.TableSetupColumn("Item Turnin".Loc() + "###GatheringTurninItems", ImGuiTableColumnFlags.WidthFixed, 100);
-                    ImGui.TableSetupColumn("Need".Loc() + "###GatheringAmountNecessary", ImGuiTableColumnFlags.WidthFixed, 50);
-                    ImGui.TableSetupColumn("Have".Loc() + "###GatheringCompleteCheck", ImGuiTableColumnFlags.WidthFixed, 100);
+                    ImGui.TableSetupColumn("Prio".Loc() + "###GatheringLevePrio", ImGuiTableColumnFlags.WidthFixed, 50f.Scale());
+                    ImGui.TableSetupColumn("Complete?".Loc() + "###GatheringLeveComplete", ImGuiTableColumnFlags.WidthFixed, 100f.Scale());
+                    ImGui.TableSetupColumn("Level".Loc() + "###GatheringLeveLevel", ImGuiTableColumnFlags.WidthFixed, 50f.Scale());
+                    ImGui.TableSetupColumn("Leve Name".Loc() + "###GatheringLeveName", ImGuiTableColumnFlags.WidthStretch);
+                    ImGui.TableSetupColumn("Item Turnin".Loc() + "###GatheringTurninItems", ImGuiTableColumnFlags.WidthFixed, 100f.Scale());
+                    ImGui.TableSetupColumn("Need".Loc() + "###GatheringAmountNecessary", ImGuiTableColumnFlags.WidthFixed, 50f.Scale());
+                    ImGui.TableSetupColumn("Have".Loc() + "###GatheringCompleteCheck", ImGuiTableColumnFlags.WidthFixed, 100f.Scale());
                     ImGui.TableSetupColumn("Triple?".Loc() + "###GatheringTripleTurnin");
                     
                     ImGui.TableHeadersRow();
@@ -473,9 +473,9 @@ internal class GatherModeUi : Window
                     if (ImGui.BeginTable("NPC Table", 3, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg))
                     {
                         // Define column widths
-                        ImGui.TableSetupColumn("NPC Name".Loc() + "###NpcPickerName", ImGuiTableColumnFlags.WidthFixed, 200);
-                        ImGui.TableSetupColumn("Level".Loc() + "###NpcPickerLevel", ImGuiTableColumnFlags.WidthFixed, 50);
-                        ImGui.TableSetupColumn("Location".Loc() + "###NpcPickerLocation", ImGuiTableColumnFlags.WidthFixed, 200);
+                        ImGui.TableSetupColumn("NPC Name".Loc() + "###NpcPickerName", ImGuiTableColumnFlags.WidthFixed, 200f.Scale());
+                        ImGui.TableSetupColumn("Level".Loc() + "###NpcPickerLevel", ImGuiTableColumnFlags.WidthFixed, 50f.Scale());
+                        ImGui.TableSetupColumn("Location".Loc() + "###NpcPickerLocation", ImGuiTableColumnFlags.WidthFixed, 200f.Scale());
                         ImGui.TableHeadersRow();
                         
                         // Loop through each NPC ID and display their name and location in the table
@@ -550,9 +550,9 @@ internal class GatherModeUi : Window
                 if (ImGui.BeginTable("NPC Table", 3, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg))
                 {
                     // Define column widths
-                    ImGui.TableSetupColumn("NPC Name".Loc() + "###NpcPickerName", ImGuiTableColumnFlags.WidthFixed, 200);
-                    ImGui.TableSetupColumn("Level".Loc() + "###NpcPickerLevel", ImGuiTableColumnFlags.WidthFixed, 50);
-                    ImGui.TableSetupColumn("Location".Loc() + "###NpcPickerLocation", ImGuiTableColumnFlags.WidthFixed, 200);
+                    ImGui.TableSetupColumn("NPC Name".Loc() + "###NpcPickerName", ImGuiTableColumnFlags.WidthFixed, 200f.Scale());
+                    ImGui.TableSetupColumn("Level".Loc() + "###NpcPickerLevel", ImGuiTableColumnFlags.WidthFixed, 50f.Scale());
+                    ImGui.TableSetupColumn("Location".Loc() + "###NpcPickerLocation", ImGuiTableColumnFlags.WidthFixed, 200f.Scale());
                     ImGui.TableHeadersRow();
     
                     // Loop through each NPC ID and display their name and location in the table
