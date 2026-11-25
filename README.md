@@ -26,19 +26,29 @@
 - 修正確認框按下後又被連按第二次會讓遊戲關閉、過場動畫期間守衛解不開的問題
 - 修正 `/chilledleves add` 少打參數會崩潰、`/chilledleves start` 啟動後不做事
 - 清單裡有已做完或材料／等級不足的理符時，不再讓自動執行中途停下
+- 接理符時同名的理符不會選錯張；交納清單裡有兩張同名理符時改為停下來，不會交錯張
+- 自動化自己停下、或途中插件被卸載／更新時，只停自己送出的 vnavmesh 路線，不切斷其他插件或你手動送出的導航；停止鈕與 `/chilledleves stop` 照舊全部停下
+- 提供急停 IPC `ChilledLeves.StopAll` 給其他插件呼叫（只能停止；開始一律要你自己按）
+- 工作清單存檔改成先寫暫存檔再換名，存到一半中斷不會留下寫壞的清單
+- 採集理符清單與委託人選擇表的欄寬跟著字級放大，不再截字
 - 沒裝 PandorasBox 時不再每幀擲例外
-- 插件庫安裝提示改指台服 feed，缺少 vnavmesh 時不會導向國際服
+- 缺少 vnavmesh 時的安裝提示改指台服的第三方插件倉庫，不會導向國際服
 - 多處降低記憶體用量
-
-## 需要搭配的插件
-
-- 必要：vnavmesh（移動）
-- 選用：YesAlready、TextAdvance、PandorasBox（裝了會在執行期間自動暫停衝突的功能）
 
 ## 安裝
 
-在 Dalamud 設定的「自訂插件庫」加入
-`https://raw.githubusercontent.com/ffxiv-tc-port/DalamudPluginsTC/main/repo.json`
-並啟用，再從插件列表安裝。
+1. 在遊戲內輸入 `/xlsettings` 開啟「Dalamud 設定」，到「試驗性功能」分頁的「第三方插件倉庫」加入
+   `https://raw.githubusercontent.com/ffxiv-tc-port/DalamudPluginsTC/main/repo.json`
+   勾選啟用後儲存。
+2. 輸入 `/xlplugins` 開啟「插件管理員」，搜尋「Chilled Leves」安裝。
+
+同一個插件只裝這裡的版本，不要同時安裝上游（國際服）版本。
+
+## 需要搭配的插件
+
+- 必要：[vnavmesh](https://github.com/ffxiv-tc-port/vnavmesh)（移動）
+- 選用：[YesAlready](https://github.com/ffxiv-tc-port/YesAlready)、[TextAdvance](https://github.com/ffxiv-tc-port/TextAdvance)、PandorasBox（裝了會在執行期間自動暫停衝突的功能）
 
 原作者：[LeontopodiumNivale14](https://github.com/LeontopodiumNivale14)
+
+授權：GPL-3.0（見 LICENSE）
